@@ -1,3 +1,2 @@
-# libmmap
-Multilinear map library
+# libmmap - Multilinear map library
 =======

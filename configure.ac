@@ -4,7 +4,7 @@ m4_define([version_micro], [0])
 
 AC_INIT([libmmap], [version_major.version_minor.version_micro])
 
-AC_CONFIG_HEADERS([src/config.h])
+AC_CONFIG_HEADERS([mmap/config.h])
 AC_CONFIG_SRCDIR([./])
 
 AC_CONFIG_AUX_DIR([build/autoconf])
@@ -42,6 +42,6 @@ if test "x$ac_cv_search_fmpz_init" = "xno"; then
    AC_MSG_ERROR([libflint not found])
 fi
 
-AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
+AC_CONFIG_FILES([Makefile mmap/Makefile tests/Makefile])
 
 AC_OUTPUT
