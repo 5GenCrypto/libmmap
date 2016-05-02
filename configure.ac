@@ -1,8 +1,8 @@
-m4_define([version_major], [0])
-m4_define([version_minor], [9])
-m4_define([version_micro], [0])
+m4_define([version_current], [1])
+m4_define([version_revision], [0])
+m4_define([version_age], [0])
 
-AC_INIT([libmmap], [version_major.version_minor.version_micro])
+AC_INIT([libmmap], [version_current.version_revision.version_age])
 
 AC_CONFIG_HEADERS([mmap/config.h])
 AC_CONFIG_SRCDIR([./])
@@ -10,6 +10,9 @@ AC_CONFIG_SRCDIR([./])
 AC_CONFIG_AUX_DIR([build/autoconf])
 AC_CONFIG_MACRO_DIR([build/autoconf])
 AM_INIT_AUTOMAKE([subdir-objects])
+
+LIBMMAP_VERSION=version_current:version_revision:version_age
+AC_SUBST(LIBMMAP_VERSION)
 
 AM_PROG_AR
 AC_PROG_LIBTOOL
