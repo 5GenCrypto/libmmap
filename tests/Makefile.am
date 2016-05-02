@@ -1,19 +1,18 @@
-AUTOMAKE_OPTIONS = foreign
-AM_CFLAGS  = ${DEBUG_CFLAGS} -I$(top_srcdir) -I$(top_srcdir)/dgs -fopenmp
+AUTOMAKE_OPTIONS = foreign -Wall
+AM_CFLAGS  = ${DEBUG_CFLAGS} -I$(top_srcdir) -I$(top_srcdir)/dgs -I$(top_srcdir)/mmap
 
-AM_LDFLAGS = -Wl,-rpath -Wl,$(top_builddir)/flint
+AM_LDFLAGS = \
+	$(top_builddir)/mmap/libmmap.la
 
-LDADD = $(top_builddir)/gghlite/libgghlite.la \
-        $(top_builddir)/dgs/libdgs.la \
-        $(top_builddir)/oz/liboz.la \
-        $(top_builddir)/dgsl/libdgsl.la \
-		-laesrand -lflint -lgmp -lmpfr -lm 
+check_PROGRAMS = test_mmap test_mmap_mat
 
-#LDFLAGS = -no-install
+TESTS = $(check_PROGRAMS)
 
-TESTS = test_rem_small test_instgen test_jigsaw
-check_PROGRAMS = $(TESTS)
+test_mmap_SOURCES = test_mmap.c utils.c
+test_mmap_LDADD   = -lm -lclt13 -lgghlite -lflint
+test_mmap_INCLUDEDIR = $(includedir)/oz $(includedir)/gghlite
 
-@VALGRIND_CHECK_RULES@
+test_mmap_mat_SOURCES = test_mmap_mat.c utils.c
+test_mmap_mat_LDADD   = -lm -lclt13 -lgghlite -lflint -lmife
+test_mmap_mat_INCLUDEDIR = $(includedir)/oz $(includedir)/gghlite
 
-all: $(TESTS)
