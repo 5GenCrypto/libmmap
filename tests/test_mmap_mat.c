@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <mife/mife_internals.h>
 
 #include "utils.h"
 

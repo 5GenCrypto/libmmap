@@ -32,6 +32,14 @@ fi
 
 AX_VALGRIND_CHECK()
 
+AC_SEARCH_LIBS(aes_randinit,aesrand)
+if test "x$ac_cv_search_aes_randinit" = "xno"; then
+  AC_MSG_ERROR([libaesrand not found])
+fi
+AC_SEARCH_LIBS(__gmpz_init,gmp)
+if test "x$ac_cv_search___gmpz_init" = "xno"; then
+  AC_MSG_ERROR([libgmp not found])
+fi
 AC_SEARCH_LIBS(clt_state_init,clt13)
 if test "x$ac_cv_search_clt_state_init" = "xno"; then
   AC_MSG_ERROR([libclt13 not found])
@@ -39,6 +47,14 @@ fi
 AC_SEARCH_LIBS(gghlite_init,gghlite)
 if test "x$ac_cv_search_gghlite_init" = "xno"; then
   AC_MSG_ERROR([libgghlite not found])
+fi
+AC_SEARCH_LIBS(fmpz_modp_matrix_inverse,oz)
+if test "x$ac_cv_search_fmpz_modp_matrix_inverse" = "xno"; then
+  AC_MSG_ERROR([liboz not found])
+fi
+AC_SEARCH_LIBS(_fmpz_clear_mpz,flint)
+if test "x$ac_cv_search__fmpz_clear_mpz" = "xno"; then
+  AC_MSG_ERROR([libflint not found])
 fi
 
 AC_CONFIG_FILES([Makefile mmap/Makefile tests/Makefile])
