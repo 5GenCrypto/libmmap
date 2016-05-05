@@ -23,7 +23,11 @@ AS_IF([test "$ac_cv_prog_cc_c99" = "no"], AC_MSG_ERROR([C99 support is required 
 AC_ARG_ENABLE(debug,        [  --enable-debug          Enable assert() statements for debugging.], [enable_debug=yes])
 
 CFLAGS=                         dnl get rid of default -g -O2
-COMMON_CFLAGS="-Wall -Wextra -Wunused -Wshadow -Wmissing-prototypes -Wcast-qual"
+COMMON_CFLAGS="-Wall -Wformat -Wformat-security -Wextra -Wunused \
+-Wshadow -Wmissing-prototypes -Wfloat-equal -Wpointer-arith -Wcast-align \
+-Wstrict-prototypes -Wredundant-decls -Wendif-labels -Wcast-qual \
+-std=gnu11 -Wpedantic"
+
 if test "x$enable_debug" = x"yes"; then
   EXTRA_CFLAGS="-O0 -g"
 else
