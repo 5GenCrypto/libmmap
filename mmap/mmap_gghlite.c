@@ -151,8 +151,8 @@ gghlite_enc_set_gghlite_clr_wrapper(mmap_enc *const enc,
 }
 
 static void gghlite_params_clear_read(gghlite_params_t gghlite_self) {
-  for(int i = 0; i < gghlite_self->gamma; i++) {
-    for(int j = 0; j < gghlite_self->kappa; j++) {
+  for(unsigned int i = 0; i < gghlite_self->gamma; i++) {
+    for(unsigned int j = 0; j < gghlite_self->kappa; j++) {
       free(gghlite_self->x[i][j]);
     }
     free(gghlite_self->x[i]);
@@ -289,7 +289,7 @@ void fread_gghlite_sk(FILE *fp, gghlite_sk_t gghlite_self) {
   gghlite_self->z_inv = malloc(gghlite_self->params->gamma * sizeof(gghlite_enc_t));
   gghlite_self->a = malloc(gghlite_self->params->gamma * sizeof(gghlite_clr_t));
   gghlite_self->b = malloc(gghlite_self->params->gamma * sizeof(gghlite_clr_t **));
-  for(int i = 0; i < gghlite_self->params->gamma; i++) {
+  for(unsigned int i = 0; i < gghlite_self->params->gamma; i++) {
     fmpz_t p1, p2;
     fmpz_init(p1);
     fmpz_init(p2);
@@ -305,7 +305,7 @@ void fread_gghlite_sk(FILE *fp, gghlite_sk_t gghlite_self) {
     fmpz_poly_fread_raw(fp, gghlite_self->a[i]);
     CHECK(fscanf(fp, "\n"), 0);
     gghlite_self->b[i] = malloc(gghlite_self->params->kappa * sizeof(gghlite_clr_t *));
-    for(int j = 0; j < gghlite_self->params->kappa; j++) {
+    for(unsigned int j = 0; j < gghlite_self->params->kappa; j++) {
       gghlite_self->b[i][j] = malloc(2 * sizeof(gghlite_clr_t));
       fmpz_poly_init(gghlite_self->b[i][j][0]);
       fmpz_poly_fread_raw(fp, gghlite_self->b[i][j][0]);
@@ -351,7 +351,7 @@ void fwrite_gghlite_sk(FILE *fp, const gghlite_sk_t gghlite_self) {
 
   t = ggh_walltime(0);
   timer_printf("Starting writing z, z_inv, a, b...\n");
-  for(int i = 0; i < gghlite_self->params->gamma; i++) {
+  for(unsigned int i = 0; i < gghlite_self->params->gamma; i++) {
     fmpz_out_raw(fp, fmpz_mod_poly_modulus(gghlite_self->z[i]));
     fprintf(fp, "\n");
     fmpz_mod_poly_fprint_raw(fp, gghlite_self->z[i]);
@@ -362,7 +362,7 @@ void fwrite_gghlite_sk(FILE *fp, const gghlite_sk_t gghlite_self) {
     fprintf(fp, "\n");
     fmpz_poly_fprint_raw(fp, gghlite_self->a[i]);
     fprintf(fp, "\n");
-    for(int j = 0; j < gghlite_self->params->kappa; j++) {
+    for(unsigned int j = 0; j < gghlite_self->params->kappa; j++) {
       fmpz_poly_fprint_raw(fp, gghlite_self->b[i][j][0]);
       fprintf(fp, "\n");
       fmpz_poly_fprint_raw(fp, gghlite_self->b[i][j][1]);
