@@ -74,11 +74,7 @@ void
 mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_pp *const params,
                      mmap_enc_mat_t r, mmap_enc_mat_t m1, mmap_enc_mat_t m2)
 {
-    mmap_enc *tmp;
     mmap_enc_mat_t tmp_mat;
-
-    tmp = malloc(mmap->enc->size);
-    mmap->enc->init(tmp, params);
 
     mmap_enc_mat_init(mmap, params, tmp_mat, m1->nrows, m2->ncols);
 
@@ -88,8 +84,12 @@ mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_pp *const params,
     for(int i = 0; i < m1->nrows; i++) {
         for(int j = 0; j < m2->ncols; j++) {
             for(int k = 0; k < m1->ncols; k++) {
+                mmap_enc *tmp = malloc(mmap->enc->size);
+                mmap->enc->init(tmp, params);
                 mmap->enc->mul(tmp, params, m1->m[i][k], m2->m[k][j]);
                 mmap->enc->add(tmp_mat->m[i][j], params, tmp_mat->m[i][j], tmp);
+                mmap->enc->clear(tmp);
+                free(tmp);
             }
         }
     }
@@ -104,7 +104,5 @@ mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_pp *const params,
     }
 
     mmap_enc_mat_clear(mmap, tmp_mat);
-    mmap->enc->clear(tmp);
-    free(tmp);
 }
 
