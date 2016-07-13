@@ -109,7 +109,7 @@ static void clt_state_save_wrapper (const mmap_sk *const sk, FILE *const fp)
 
 static void clt_state_get_modulus (const mmap_sk *const sk, fmpz_t p_out)
 {
-    fmpz_set_mpz(p_out, sk->clt_self.gs[0]);
+    fmpz_set_mpz(p_out, sk->clt_self.g);
 }
 
 static const mmap_pp *const clt_pp_init_wrapper (const mmap_sk *const sk)
