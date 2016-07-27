@@ -12,7 +12,7 @@
 
 const ulong lambdas[] = {8, 16, 24, 32};
 
-static int test(const mmap_vtable *mmap, ulong lambda)
+static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
 {
     srand(time(NULL));
 
@@ -39,7 +39,7 @@ static int test(const mmap_vtable *mmap, ulong lambda)
 
     // test initialization & serialization
     mmap_sk *sk_ = malloc(mmap->sk->size);
-    mmap->sk->init(sk_, lambda, kappa, nzs, rng, false);
+    mmap->sk->init(sk_, lambda, kappa, nzs, rng, true);
     mmap->sk->fwrite(sk_, sk_f);
     rewind(sk_f);
     mmap->sk->clear(sk_);
@@ -77,25 +77,12 @@ static int test(const mmap_vtable *mmap, ulong lambda)
         top_level[i] = 1;
     }
 
+    int ok = 1;
+
     mmap_enc x0, x1, xp;
     mmap->enc->init(&x0, pp);
     mmap->enc->init(&x1, pp);
     mmap->enc->init(&xp, pp);
-    mmap->enc->encode(&x0, sk, 1, zero, top_level, rng);
-    mmap->enc->encode(&x1, sk, 1, zero, top_level, rng);
-    mmap->enc->add(&xp, pp, &x0, &x1);
-    int ok = expect("is_zero(0 + 0)", 1, mmap->enc->is_zero(&xp, pp));
-
-    mmap->enc->encode(&x0, sk, 1, zero, top_level, rng);
-    mmap->enc->encode(&x1, sk, 1, one,  top_level, rng);
-    mmap->enc->add(&xp, pp, &x0, &x1);
-    ok &= expect("is_zero(0 + 1)", 0, mmap->enc->is_zero(&xp, pp));
-
-    mmap->enc->encode(&x0, sk, 1, zero, top_level, rng);
-    mmap->enc->encode(&x1, sk, 1, x,    top_level, rng);
-    mmap->enc->add(&xp, pp, &x0, &x1);
-    ok &= expect("is_zero(0 + x)", 0, mmap->enc->is_zero(&xp, pp));
-
     int ix0 [nzs];
     int ix1 [nzs];
     for (ulong i = 0; i < nzs; i++) {
@@ -107,20 +94,48 @@ static int test(const mmap_vtable *mmap, ulong lambda)
             ix1[i] = 1;
         }
     }
-    mmap->enc->encode(&x0, sk, 1, x   , ix0, rng);
-    mmap->enc->encode(&x1, sk, 1, zero, ix1, rng);
-    mmap->enc->mul(&xp, pp, &x0, &x1);
-    ok &= expect("is_zero(x * 0)", 1, mmap->enc->is_zero(&xp, pp));
 
-    mmap->enc->encode(&x0, sk, 1, x   , ix0, rng);
-    mmap->enc->encode(&x1, sk, 1, one, ix1, rng);
-    mmap->enc->mul(&xp, pp, &x0, &x1);
-    ok &= expect("is_zero(x * 1)", 0, mmap->enc->is_zero(&xp, pp));
+    if (!is_gghlite) {
+        mmap->enc->encode(&x0, sk, 1, zero, top_level, rng);
+        mmap->enc->encode(&x1, sk, 1, zero, top_level, rng);
+        mmap->enc->add(&xp, pp, &x0, &x1);
+        ok &= expect("is_zero(0 + 0)", 1, mmap->enc->is_zero(&xp, pp));
 
-    mmap->enc->encode(&x0, sk, 1, x   , ix0, rng);
+        mmap->enc->encode(&x0, sk, 1, zero, top_level, rng);
+        mmap->enc->encode(&x1, sk, 1, one,  top_level, rng);
+        mmap->enc->add(&xp, pp, &x0, &x1);
+        ok &= expect("is_zero(0 + 1)", 0, mmap->enc->is_zero(&xp, pp));
+
+        mmap->enc->encode(&x0, sk, 1, zero, top_level, rng);
+        mmap->enc->encode(&x1, sk, 1, x,    top_level, rng);
+        mmap->enc->add(&xp, pp, &x0, &x1);
+        ok &= expect("is_zero(0 + x)", 0, mmap->enc->is_zero(&xp, pp));
+
+        mmap->enc->encode(&x0, sk, 1, x   , ix0, rng);
+        mmap->enc->encode(&x1, sk, 1, zero, ix1, rng);
+        mmap->enc->mul(&xp, pp, &x0, &x1);
+        ok &= expect("is_zero(x * 0)", 1, mmap->enc->is_zero(&xp, pp));
+
+        mmap->enc->encode(&x0, sk, 1, x   , ix0, rng);
+        mmap->enc->encode(&x1, sk, 1, one, ix1, rng);
+        mmap->enc->mul(&xp, pp, &x0, &x1);
+        ok &= expect("is_zero(x * 1)", 0, mmap->enc->is_zero(&xp, pp));
+    }
+
+    mmap->enc->encode(&x0, sk, 1, x, ix0, rng);
     mmap->enc->encode(&x1, sk, 1, x, ix1, rng);
     mmap->enc->mul(&xp, pp, &x0, &x1);
     ok &= expect("is_zero(x * x)", 0, mmap->enc->is_zero(&xp, pp));
+
+    /* mmap->enc->encode(&x0, sk, 1, x, ix0, rng); */
+    /* mmap->enc->encode(&x1, sk, 1, x, ix1, rng); */
+    /* mmap->enc->sub(&xp, pp, &x0, &x1); */
+    /* ok &= expect("is_zero(x - x)", 1, mmap->enc->is_zero(&xp, pp)); */
+
+    mmap->enc->encode(&x0, sk, 1, x, ix0, rng);
+    mmap->enc->encode(&x1, sk, 1, x, ix1, rng);
+    mmap->enc->add(&xp, pp, &x0, &x1);
+    ok &= expect("is_zero(x + x)", 0, mmap->enc->is_zero(&xp, pp));
 
     mmap->enc->clear(&x0);
     mmap->enc->clear(&x1);
@@ -129,12 +144,12 @@ static int test(const mmap_vtable *mmap, ulong lambda)
     return !ok;
 }
 
-static int test_lambdas(const mmap_vtable *vtable)
+static int test_lambdas(const mmap_vtable *vtable, bool is_gghlite)
 {
     int err = 0;
     for (int i = 0; i < sizeof(lambdas) / (sizeof(lambdas[0])); ++i) {
         printf("** lambda = %lu\n", lambdas[i]);
-        err |= test(vtable, lambdas[i]);
+        err |= test(vtable, lambdas[i], is_gghlite);
     }
     return err;
 }
@@ -143,9 +158,9 @@ int main(void)
 {
     int err = 0;
     printf("* CLT13\n");
-    err |= test_lambdas(&clt_vtable);
+    err |= test_lambdas(&clt_vtable, false);
     printf("* GGHLite\n");
-    err |= test_lambdas(&gghlite_vtable);
+    err |= test_lambdas(&gghlite_vtable, true);
     return err;
 }
 
