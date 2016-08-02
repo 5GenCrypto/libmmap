@@ -81,7 +81,7 @@ static void clt_pp_save_wrapper (const mmap_pp *const pp, FILE *const fp)
 static void clt_state_init_wrapper (mmap_sk *const sk, size_t lambda, size_t kappa,
                                     size_t gamma, aes_randstate_t rng, bool verbose)
 {
-    int flags = CLT_FLAG_DEFAULT | CLT_FLAG_OPT_PARALLEL_ENCODE;
+    int flags = CLT_FLAG_OPT_PARALLEL_ENCODE;
     int *pows = malloc(gamma * sizeof(int));
     for (size_t i = 0; i < gamma; i++) {
         pows[i] = 1;

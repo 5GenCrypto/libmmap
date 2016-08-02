@@ -1,6 +1,7 @@
 #include <mmap.h>
 #include <mmap_clt.h>
 #include <mmap_gghlite.h>
+#include <mmap_dummy.h>
 #include <flint/fmpz.h>
 #include <errno.h>
 #include <stdio.h>
@@ -157,6 +158,9 @@ static int test_lambdas(const mmap_vtable *vtable, bool is_gghlite)
 int main(void)
 {
     int err = 0;
+    printf("* Dummy\n");
+    err |= test_lambdas(&dummy_vtable);
+
     printf("* CLT13\n");
     err |= test_lambdas(&clt_vtable, false);
     printf("* GGHLite\n");
