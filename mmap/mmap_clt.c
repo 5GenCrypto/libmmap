@@ -121,17 +121,17 @@ static const mmap_pp *const clt_pp_init_wrapper (const mmap_sk *const sk)
 
 static void clt_enc_init_wrapper (mmap_enc *const enc, const mmap_pp *const pp)
 {
-    mpz_init(enc->clt_self);
+    clt_elem_init(enc->clt_self);
 }
 
 static void clt_enc_clear_wrapper (mmap_enc *const enc)
 {
-    mpz_clear(enc->clt_self);
+    clt_elem_clear(enc->clt_self);
 }
 
 static void clt_enc_fread_wrapper (mmap_enc *enc, FILE *const fp)
 {
-    mpz_init(enc->clt_self);
+    clt_elem_init(enc->clt_self);
     mpz_inp_raw(enc->clt_self, fp);
 }
 
@@ -142,19 +142,17 @@ static void clt_enc_fwrite_wrapper (const mmap_enc *const enc, FILE *const fp)
 
 static void clt_enc_set_wrapper (mmap_enc *const dest, const mmap_enc *const src)
 {
-    mpz_set(dest->clt_self, src->clt_self);
+    clt_elem_set(dest->clt_self, src->clt_self);
 }
 
 static void clt_enc_add_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
 {
-    mpz_add(dest->clt_self, a->clt_self, b->clt_self);
-    mpz_mod(dest->clt_self, dest->clt_self, pp->clt_self.x0);
+    clt_elem_add(dest->clt_self, pp, a->clt_self, b->clt_self);
 }
 
 static void clt_enc_mul_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
 {
-    mpz_mul(dest->clt_self, a->clt_self, b->clt_self);
-    mpz_mod(dest->clt_self, dest->clt_self, pp->clt_self.x0);
+    clt_elem_mul(dest->clt_self, pp, a->clt_self, b->clt_self);
 }
 
 static bool clt_enc_is_zero_wrapper (const mmap_enc *const enc, const mmap_pp *const pp)
