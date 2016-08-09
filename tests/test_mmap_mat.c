@@ -92,7 +92,7 @@ static int test(const mmap_vtable *vtable, ulong lambda)
     fmpz_t mod;
     fmpz_init(mod);
 
-    vtable->sk->init(&sk, lambda, kappa, nzs, rng, false);
+    vtable->sk->init(&sk, lambda, kappa, nzs, 0, rng, false);
     vtable->sk->plaintext_field(&sk, mod);
     pp = vtable->sk->pp(&sk);
 

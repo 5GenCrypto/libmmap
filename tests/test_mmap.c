@@ -40,7 +40,7 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
 
     // test initialization & serialization
     mmap_sk *sk_ = malloc(mmap->sk->size);
-    mmap->sk->init(sk_, lambda, kappa, nzs, rng, true);
+    mmap->sk->init(sk_, lambda, kappa, nzs, 0, rng, true);
     mmap->sk->fwrite(sk_, sk_f);
     rewind(sk_f);
     mmap->sk->clear(sk_);
@@ -159,8 +159,7 @@ int main(void)
 {
     int err = 0;
     printf("* Dummy\n");
-    err |= test_lambdas(&dummy_vtable);
-
+    err |= test_lambdas(&dummy_vtable, false);
     printf("* CLT13\n");
     err |= test_lambdas(&clt_vtable, false);
     printf("* GGHLite\n");
