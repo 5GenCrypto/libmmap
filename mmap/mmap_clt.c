@@ -172,7 +172,7 @@ clt_encode_wrapper (mmap_enc *const enc, const mmap_sk *const sk, int n,
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
-    clt_encode(enc->clt_self, &(sk->clt_self), n, ins, group, rng);
+    clt_encode(enc->clt_self, &(sk->clt_self), n, ins, group);
     for (int i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }
