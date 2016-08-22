@@ -45,8 +45,10 @@ static const mmap_pp_vtable gghlite_pp_vtable =
 
 static void
 gghlite_jigsaw_init_gamma_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
-                                  size_t gamma, unsigned long ncores __attribute__ ((unused)),
-                                  aes_randstate_t randstate, bool verbose) {
+                                  size_t gamma, int *pows __attribute__ ((unused)),
+                                  unsigned long ncores __attribute__ ((unused)),
+                                  aes_randstate_t randstate, bool verbose)
+{
     gghlite_flag_t flags = GGHLITE_FLAGS_GOOD_G_INV;
     if (verbose)
         flags |= GGHLITE_FLAGS_VERBOSE;
@@ -122,13 +124,12 @@ static bool gghlite_enc_is_zero_wrapper(const mmap_enc *const enc, const mmap_pp
 static void
 gghlite_enc_set_gghlite_clr_wrapper(mmap_enc *const enc,
                                     const mmap_sk *const sk, int n __attribute__ ((unused)),
-                                    const fmpz_t *plaintext, int *group,
-                                    aes_randstate_t randstate)
+                                    const fmpz_t *plaintext, int *group)
 {
     gghlite_clr_t e;
     gghlite_clr_init(e);
     fmpz_poly_set_coeff_fmpz(e, 0, plaintext[0]);
-    gghlite_enc_set_gghlite_clr(enc->gghlite_self, sk->gghlite_self, e, 1, group, 1, randstate);
+    gghlite_enc_set_gghlite_clr(enc->gghlite_self, sk->gghlite_self, e, 1, group, 1);
     gghlite_clr_clear(e);
 }
 

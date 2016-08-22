@@ -22,22 +22,28 @@ static const mmap_pp_vtable clt_pp_vtable =
   { .clear  = clt_pp_clear_wrapper
   , .fread  = clt_pp_read_wrapper
   , .fwrite = clt_pp_save_wrapper
-  , .size   = sizeof(mmap_pp)
+  , .size   = sizeof(clt_pp)
   };
 
 static void clt_state_init_wrapper (mmap_sk *const sk, size_t lambda, size_t kappa,
-                                    size_t gamma, unsigned long ncores,
+                                    size_t gamma, int *pows, unsigned long ncores,
                                     aes_randstate_t rng, bool verbose)
 {
+    bool new_pows = false;
     int flags = CLT_FLAG_OPT_CRT_TREE | CLT_FLAG_OPT_PARALLEL_ENCODE;
-    int *pows = malloc(gamma * sizeof(int));
-    for (size_t i = 0; i < gamma; i++) {
-        pows[i] = 1;
-    }
     if (verbose)
         flags |= CLT_FLAG_VERBOSE;
-    clt_state_init(&(sk->clt_self), kappa, lambda, gamma, pows, ncores, flags, rng);
-    free(pows);
+
+    if (pows == NULL) {
+        new_pows = true;
+        pows = calloc(gamma, sizeof(int));
+        for (size_t i = 0; i < gamma; i++) {
+            pows[i] = 1;
+        }
+    }
+    clt_state_init(&sk->clt_self, kappa, lambda, gamma, pows, ncores, flags, rng);
+    if (new_pows)
+        free(pows);
 }
 
 static void clt_state_clear_wrapper (mmap_sk *const sk)
@@ -125,7 +131,7 @@ static bool clt_enc_is_zero_wrapper (const mmap_enc *const enc, const mmap_pp *c
 
 static void
 clt_encode_wrapper (mmap_enc *const enc, const mmap_sk *const sk, int n,
-                    const fmpz_t *plaintext, int *group, aes_randstate_t rng __attribute__ ((unused)))
+                    const fmpz_t *plaintext, int *group)
 {
     mpz_t *ins;
 
@@ -134,7 +140,7 @@ clt_encode_wrapper (mmap_enc *const enc, const mmap_sk *const sk, int n,
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
-    clt_encode(enc->clt_self, &(sk->clt_self), n, ins, group);
+    clt_encode(enc->clt_self, &sk->clt_self, n, ins, group);
     for (int i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }
@@ -152,7 +158,7 @@ static const mmap_enc_vtable clt_enc_vtable =
   , .mul     = clt_enc_mul_wrapper
   , .is_zero = clt_enc_is_zero_wrapper
   , .encode  = clt_encode_wrapper
-  , .size    = sizeof(mmap_enc)
+  , .size    = sizeof(clt_elem_t)
   };
 
 const mmap_vtable clt_vtable =

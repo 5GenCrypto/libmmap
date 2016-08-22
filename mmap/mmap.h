@@ -5,15 +5,29 @@
 #include <clt13.h>
 #include <stdbool.h>
 
+#include <gmp.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* structs for dummy mmap */
+typedef struct {
+    mpz_t *moduli;
+} dummy_pp_t;
+typedef struct {
+    mpz_t *moduli;
+} dummy_sk_t;
+typedef struct {
+    mpz_t *elems;
+} dummy_enc_t;
+/* end structs for dummy mmap */
 
 struct mmap_pp {
     union {
         gghlite_params_t gghlite_self;
         clt_pp clt_self;
-        mpz_t dummy_self;
+        dummy_pp_t dummy_self;
     };
 };
 typedef struct mmap_pp mmap_pp;
@@ -22,6 +36,7 @@ struct mmap_sk {
     union {
         gghlite_sk_t gghlite_self;
         clt_state clt_self;
+        dummy_sk_t dummy_self;
     };
 };
 typedef struct mmap_sk mmap_sk;
@@ -30,7 +45,7 @@ struct mmap_enc {
     union {
         gghlite_enc_t gghlite_self;
         clt_elem_t clt_self;
-        mpz_t dummy_self;
+        dummy_enc_t dummy_self;
     };
 };
 typedef struct mmap_enc mmap_enc;
@@ -50,8 +65,8 @@ typedef struct {
      * gamma: the size of the universe that we will zero-test things at
      */
     void (*const init)(mmap_sk *const sk, size_t lambda, size_t kappa,
-                       size_t gamma, unsigned long ncores, aes_randstate_t rng,
-                       bool verbose);
+                       size_t gamma, int *pows, unsigned long ncores,
+                       aes_randstate_t rng, bool verbose);
     void (*const clear)(mmap_sk *const sk);
     void (*const fread)(mmap_sk *const sk, FILE *const fp);
     void (*const fwrite)(const mmap_sk *const sk, FILE *const fp);
@@ -73,9 +88,8 @@ typedef struct {
     void (*const mul)(mmap_enc *const dest, const mmap_pp *const pp,
                       const mmap_enc *const a, const mmap_enc *const b);
     bool (*const is_zero)(const mmap_enc *const enc, const mmap_pp *const pp);
-    /* TODO: should this `int *` be `bool *`? */
     void (*const encode)(mmap_enc *const enc, const mmap_sk *const sk, int n,
-                         const fmpz_t *plaintext, int *group, aes_randstate_t rng);
+                         const fmpz_t *plaintext, int *group);
     const size_t size;
 } mmap_enc_vtable;
 
