@@ -16,7 +16,7 @@ static void gghlite_jigsaw_init_gamma_wrapper(mmap_sk *const sk, size_t lambda, 
 static void gghlite_sk_clear_wrapper(mmap_sk *const sk);
 static void fread_gghlite_sk_wrapper(mmap_sk *const sk, FILE *const fp);
 static void fwrite_gghlite_sk_wrapper(const mmap_sk *const sk, FILE *const fp);
-static const mmap_pp *const gghlite_sk_to_pp(const mmap_sk *const sk);
+static const mmap_pp * gghlite_sk_to_pp(const mmap_sk *const sk);
 static void fmpz_poly_oz_ideal_norm_wrapper(const mmap_sk *const sk, fmpz_t p_out);
 
 static void gghlite_enc_init_wrapper(mmap_enc *const enc, const mmap_pp *const pp);
@@ -93,7 +93,7 @@ static void fread_gghlite_params_wrapper(mmap_pp *const pp, FILE *const fp)
 static void fwrite_gghlite_params_wrapper(const mmap_pp *const pp, FILE *const fp)
 { fwrite_gghlite_params(fp, pp->gghlite_self); }
 
-static void gghlite_jigsaw_init_gamma_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa, size_t gamma, unsigned long ncores, aes_randstate_t randstate, bool verbose) {
+static void gghlite_jigsaw_init_gamma_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa, size_t gamma, unsigned long ncores __attribute__ ((unused)), aes_randstate_t randstate, bool verbose) {
     gghlite_flag_t flags = GGHLITE_FLAGS_GOOD_G_INV;
     if (verbose)
         flags |= GGHLITE_FLAGS_VERBOSE;
@@ -108,11 +108,11 @@ static void fread_gghlite_sk_wrapper(mmap_sk *const sk, FILE *const fp)
 { fread_gghlite_sk(fp, sk->gghlite_self); }
 static void fwrite_gghlite_sk_wrapper(const mmap_sk *const sk, FILE *const fp)
 { fwrite_gghlite_sk(fp, sk->gghlite_self); }
-static const mmap_pp *const gghlite_sk_to_pp(const mmap_sk *const sk)
+static const mmap_pp * gghlite_sk_to_pp(const mmap_sk *const sk)
 /* N.B. This cast is strictly speaking probably not okay from a "portable C"
  * standpoint. However it's almost certainly going to be fine with all the
  * compilers we care about... */
-{ return (mmap_pp *)sk->gghlite_self->params; }
+{ return (const mmap_pp *)sk->gghlite_self->params; }
 static void fmpz_poly_oz_ideal_norm_wrapper(const mmap_sk *const sk, fmpz_t p_out)
 { fmpz_poly_oz_ideal_norm(p_out, sk->gghlite_self->g, sk->gghlite_self->params->n, 0); }
 
@@ -139,7 +139,7 @@ static bool gghlite_enc_is_zero_wrapper(const mmap_enc *const enc, const mmap_pp
 
 static void
 gghlite_enc_set_gghlite_clr_wrapper(mmap_enc *const enc,
-                                    const mmap_sk *const sk, int n,
+                                    const mmap_sk *const sk, int n __attribute__ ((unused)),
                                     const fmpz_t *plaintext, int *group,
                                     aes_randstate_t randstate)
 {
@@ -155,7 +155,7 @@ static void fread_gghlite_params(FILE *fp, gghlite_params_t params) {
     size_t lambda, kappa, gamma, n, ell;
     uint64_t rerand_mask;
     int gghlite_flag_int;
-    CHECK(fscanf(fp, "%zd %zd %zd %ld %ld %lu %d\n",
+    CHECK(fscanf(fp, "%zu %zu %zu %lu %lu %lu %d\n",
                  &lambda,
                  &gamma,
                  &kappa,
@@ -188,7 +188,7 @@ static void fread_gghlite_params(FILE *fp, gghlite_params_t params) {
 
     gghlite_enc_fread_raw(fp, params->pzt);
     CHECK(fscanf(fp, "\n"), 0);
-    CHECK(fscanf(fp, "%zd\n", &params->ntt->n), 1);
+    CHECK(fscanf(fp, "%zu\n", &params->ntt->n), 1);
     gghlite_enc_fread_raw(fp, params->ntt->w);
     CHECK(fscanf(fp, "\n"), 0);
     gghlite_enc_fread_raw(fp, params->ntt->w_inv);

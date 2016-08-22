@@ -56,7 +56,7 @@ typedef struct {
   void (*const fwrite)(const mmap_sk *, FILE *);
   const size_t size;
 
-  const mmap_pp *const (*const pp)(const mmap_sk *);
+  const mmap_pp * (*const pp)(const mmap_sk *);
   void (*const plaintext_field)(const mmap_sk *, fmpz_t);
 } mmap_sk_vtable;
 

@@ -19,7 +19,7 @@ static void clt_state_clear_wrapper (mmap_sk *const sk);
 static void clt_state_read_wrapper  (mmap_sk *const sk, FILE *const fp);
 static void clt_state_save_wrapper  (const mmap_sk *const sk, FILE *const fp);
 static void clt_state_get_modulus   (const mmap_sk *const sk, fmpz_t p_out);
-static const mmap_pp *const clt_pp_init_wrapper (const mmap_sk *const sk);
+static const mmap_pp * clt_pp_init_wrapper (const mmap_sk *const sk);
 
 static const mmap_sk_vtable clt_sk_vtable =
   { .init   = clt_state_init_wrapper
@@ -113,14 +113,14 @@ static void clt_state_get_modulus (const mmap_sk *const sk, fmpz_t p_out)
     fmpz_set_mpz(p_out, sk->clt_self.gs[0]);
 }
 
-static const mmap_pp *const clt_pp_init_wrapper (const mmap_sk *const sk)
+static const mmap_pp * clt_pp_init_wrapper (const mmap_sk *const sk)
 {
     mmap_pp *pp = malloc(sizeof(mmap_pp));
     clt_pp_init(&(pp->clt_self), &(sk->clt_self));
     return pp;
 }
 
-static void clt_enc_init_wrapper (mmap_enc *const enc, const mmap_pp *const pp)
+static void clt_enc_init_wrapper (mmap_enc *const enc, const mmap_pp *const pp __attribute__ ((unused)))
 {
     clt_elem_init(enc->clt_self);
 }
@@ -148,22 +148,22 @@ static void clt_enc_set_wrapper (mmap_enc *const dest, const mmap_enc *const src
 
 static void clt_enc_add_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
 {
-    clt_elem_add(dest->clt_self, pp, a->clt_self, b->clt_self);
+    clt_elem_add(dest->clt_self, &pp->clt_self, a->clt_self, b->clt_self);
 }
 
 static void clt_enc_mul_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
 {
-    clt_elem_mul(dest->clt_self, pp, a->clt_self, b->clt_self);
+    clt_elem_mul(dest->clt_self, &pp->clt_self, a->clt_self, b->clt_self);
 }
 
 static bool clt_enc_is_zero_wrapper (const mmap_enc *const enc, const mmap_pp *const pp)
 {
-    return clt_is_zero(&(pp->clt_self), enc->clt_self);
+    return clt_is_zero(&pp->clt_self, enc->clt_self);
 }
 
 static void
 clt_encode_wrapper (mmap_enc *const enc, const mmap_sk *const sk, int n,
-                    const fmpz_t *plaintext, int *group, aes_randstate_t rng)
+                    const fmpz_t *plaintext, int *group, aes_randstate_t rng __attribute__ ((unused)))
 {
     mpz_t *ins;
 

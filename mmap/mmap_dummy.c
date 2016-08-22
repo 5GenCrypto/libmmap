@@ -7,8 +7,8 @@
 #define __UNUSED__
 #endif
 
-static const mmap_pp *const
-dummy_pp_init(const mmap_sk *const sk)
+static const mmap_pp *
+dummy_pp_init(const mmap_sk *const sk __UNUSED__)
 {
     mmap_pp *pp = calloc(1, sizeof(mmap_pp));
     mpz_init_set_ui(pp->dummy_self, 71);
@@ -42,12 +42,13 @@ static const mmap_pp_vtable dummy_pp_vtable =
 };
 
 static void
-dummy_state_init(mmap_sk *const sk, size_t lambda, size_t kappa, size_t gamma,
-                 aes_randstate_t rng, bool verbose)
+dummy_state_init(mmap_sk *const sk __UNUSED__, size_t lambda __UNUSED__,
+                 size_t kappa __UNUSED__, size_t gamma __UNUSED__,
+                 aes_randstate_t rng __UNUSED__, bool verbose __UNUSED__)
 {}
 
 static void
-dummy_state_clear(mmap_sk *const sk)
+dummy_state_clear(mmap_sk *const sk __UNUSED__)
 {}
 
 static void
@@ -128,8 +129,9 @@ dummy_enc_is_zero(const mmap_enc *const enc, const mmap_pp *const pp __UNUSED__)
 }
 
 static void
-dummy_encode(mmap_enc *const enc, const mmap_sk *const sk, int n,
-             const fmpz_t *plaintext, int *group, aes_randstate_t rng)
+dummy_encode(mmap_enc *const enc, const mmap_sk *const sk __UNUSED__,
+             int n __UNUSED__, const fmpz_t *plaintext, int *group __UNUSED__,
+             aes_randstate_t rng __UNUSED__)
 {
     fmpz_get_mpz(enc->dummy_self, plaintext[0]);
 }
