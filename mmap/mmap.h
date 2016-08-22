@@ -65,8 +65,6 @@ typedef struct {
     void (*const clear)(mmap_enc *const enc);
     void (*const fread)(mmap_enc *const enc, FILE *const fp);
     void (*const fwrite)(const mmap_enc *const enc, FILE *const fp);
-    const size_t size;
-
     void (*const set)(mmap_enc *const dest, const mmap_enc *const src);
     void (*const add)(mmap_enc *const dest, const mmap_pp *const pp,
                       const mmap_enc *const a, const mmap_enc *const b);
@@ -77,6 +75,7 @@ typedef struct {
     /* TODO: should this `int *` be `bool *`? */
     void (*const encode)(mmap_enc *const enc, const mmap_sk *const sk, int n,
                          const fmpz_t *plaintext, int *group, aes_randstate_t rng);
+    const size_t size;
 } mmap_enc_vtable;
 
 typedef struct {
