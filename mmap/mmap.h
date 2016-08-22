@@ -38,7 +38,7 @@ typedef struct mmap_enc mmap_enc;
 /* If we call init or fread, we will call clear. In particular, we will not
  * call clear on the mmap_pp we retrieve from an mmap_sk. */
 typedef struct {
-    void (*const clear)(mmap_pp *pp);
+    void (*const clear)(mmap_pp *const pp);
     void (*const fread)(mmap_pp *const pp, FILE *const fp);
     void (*const fwrite)(const mmap_pp *const pp, FILE *const fp);
     const size_t size;
@@ -68,7 +68,8 @@ typedef struct {
     void (*const set)(mmap_enc *const dest, const mmap_enc *const src);
     void (*const add)(mmap_enc *const dest, const mmap_pp *const pp,
                       const mmap_enc *const a, const mmap_enc *const b);
-    /* TODO: sub? */
+    void (*const sub)(mmap_enc *const dest, const mmap_pp *const pp,
+                      const mmap_enc *const a, const mmap_enc *const b);
     void (*const mul)(mmap_enc *const dest, const mmap_pp *const pp,
                       const mmap_enc *const a, const mmap_enc *const b);
     bool (*const is_zero)(const mmap_enc *const enc, const mmap_pp *const pp);

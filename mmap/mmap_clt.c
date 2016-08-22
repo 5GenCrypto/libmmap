@@ -108,6 +108,11 @@ static void clt_enc_add_wrapper (mmap_enc *const dest, const mmap_pp *const pp, 
     clt_elem_add(dest->clt_self, &pp->clt_self, a->clt_self, b->clt_self);
 }
 
+static void clt_enc_sub_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
+{
+    clt_elem_sub(dest->clt_self, &pp->clt_self, a->clt_self, b->clt_self);
+}
+
 static void clt_enc_mul_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
 {
     clt_elem_mul(dest->clt_self, &pp->clt_self, a->clt_self, b->clt_self);
@@ -143,6 +148,7 @@ static const mmap_enc_vtable clt_enc_vtable =
   , .fwrite  = clt_enc_fwrite_wrapper
   , .set     = clt_enc_set_wrapper
   , .add     = clt_enc_add_wrapper
+  , .sub     = clt_enc_sub_wrapper
   , .mul     = clt_enc_mul_wrapper
   , .is_zero = clt_enc_is_zero_wrapper
   , .encode  = clt_encode_wrapper
