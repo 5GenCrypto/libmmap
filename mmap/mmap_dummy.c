@@ -116,6 +116,14 @@ dummy_enc_add(mmap_enc *const dest, const mmap_pp *const pp,
 }
 
 static void
+dummy_enc_sub(mmap_enc *const dest, const mmap_pp *const pp,
+              const mmap_enc *const a, const mmap_enc *const b)
+{
+    mpz_sub(dest->dummy_self, a->dummy_self, b->dummy_self);
+    mpz_mod(dest->dummy_self, dest->dummy_self, pp->dummy_self);
+}
+
+static void
 dummy_enc_mul(mmap_enc *const dest, const mmap_pp *const pp,
               const mmap_enc *const a, const mmap_enc *const b)
 {
@@ -144,6 +152,7 @@ static const mmap_enc_vtable dummy_enc_vtable =
   .fwrite = dummy_enc_fwrite,
   .set = dummy_enc_set,
   .add = dummy_enc_add,
+  .sub = dummy_enc_sub,
   .mul = dummy_enc_mul,
   .is_zero = dummy_enc_is_zero,
   .encode = dummy_encode,
