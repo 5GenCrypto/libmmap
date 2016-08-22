@@ -44,7 +44,8 @@ static const mmap_pp_vtable dummy_pp_vtable =
 static void
 dummy_state_init(mmap_sk *const sk __UNUSED__, size_t lambda __UNUSED__,
                  size_t kappa __UNUSED__, size_t gamma __UNUSED__,
-                 aes_randstate_t rng __UNUSED__, bool verbose __UNUSED__)
+                 unsigned long ncores __UNUSED__, aes_randstate_t rng __UNUSED__,
+                 bool verbose __UNUSED__)
 {}
 
 static void
