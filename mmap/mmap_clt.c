@@ -73,8 +73,8 @@ static const mmap_sk_vtable clt_sk_vtable =
   , .fread  = clt_state_read_wrapper
   , .fwrite = clt_state_save_wrapper
   , .pp     = clt_pp_init_wrapper
-  , .size   = sizeof(clt_state)
   , .plaintext_field = clt_state_get_modulus
+  , .size   = sizeof(clt_state)
   };
 
 static void clt_enc_init_wrapper (mmap_enc *const enc, const mmap_pp *const pp __attribute__ ((unused)))
@@ -87,7 +87,7 @@ static void clt_enc_clear_wrapper (mmap_enc *const enc)
     clt_elem_clear(enc->clt_self);
 }
 
-static void clt_enc_fread_wrapper (mmap_enc *enc, FILE *const fp)
+static void clt_enc_fread_wrapper (mmap_enc *const enc, FILE *const fp)
 {
     clt_elem_init(enc->clt_self);
     mpz_inp_raw(enc->clt_self, fp);
