@@ -80,6 +80,11 @@ static const mmap_pp * clt_pp_init_wrapper (const mmap_sk *const sk)
     return pp;
 }
 
+static size_t clt_state_nslots (const mmap_sk *const sk)
+{
+    return sk->clt_self.n;
+}
+
 static const mmap_sk_vtable clt_sk_vtable =
   { .init   = clt_state_init_wrapper
   , .clear  = clt_state_clear_wrapper
@@ -87,6 +92,7 @@ static const mmap_sk_vtable clt_sk_vtable =
   , .fwrite = clt_state_save_wrapper
   , .pp     = clt_pp_init_wrapper
   , .plaintext_fields = clt_state_get_moduli
+  , .nslots = clt_state_nslots
   , .size   = sizeof(clt_state)
   };
 

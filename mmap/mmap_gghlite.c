@@ -79,6 +79,11 @@ static fmpz_t * fmpz_poly_oz_ideal_norm_wrapper(const mmap_sk *const sk)
     return moduli;
 }
 
+static size_t gghlite_nslots(const mmap_sk *const sk __attribute__ ((unused)))
+{
+    return 1;
+}
+
 static const mmap_sk_vtable gghlite_sk_vtable =
 { .init = gghlite_jigsaw_init_gamma_wrapper
   , .clear = gghlite_sk_clear_wrapper
@@ -86,6 +91,7 @@ static const mmap_sk_vtable gghlite_sk_vtable =
   , .fwrite = fwrite_gghlite_sk_wrapper
   , .pp = gghlite_sk_to_pp
   , .plaintext_fields = fmpz_poly_oz_ideal_norm_wrapper
+  , .nslots = gghlite_nslots
   , .size = sizeof(mmap_sk)
 };
 

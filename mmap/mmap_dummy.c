@@ -108,6 +108,12 @@ dummy_state_get_moduli(const mmap_sk *const sk)
     return moduli;
 }
 
+static size_t
+dummy_state_nslots(const mmap_sk *const sk __attribute__ ((unused)))
+{
+    return 2;
+}
+
 static const mmap_sk_vtable dummy_sk_vtable =
 { .init = dummy_state_init,
   .clear = dummy_state_clear,
@@ -116,6 +122,7 @@ static const mmap_sk_vtable dummy_sk_vtable =
   .pp = dummy_pp_init,
   .size = 0,
   .plaintext_fields = dummy_state_get_moduli,
+  .nslots = dummy_state_nslots,
 };
 
 static void
