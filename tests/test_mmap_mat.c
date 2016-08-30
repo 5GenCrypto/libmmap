@@ -28,7 +28,7 @@ static void encode(const mmap_vtable *vtable, mmap_sk *sk,
     for (int i = 0; i < nrows; ++i) {
         for (int j = 0; j < ncols; ++j) {
             vtable->enc->encode(out->m[i][j], sk, 1, fmpz_mat_entry(in, i, j),
-                                pows, rand);
+                                pows);
         }
     }
     free(pows);
@@ -89,11 +89,10 @@ static int test(const mmap_vtable *vtable, ulong lambda)
     aes_randstate_t rng;
     aes_randinit(rng);
 
-    fmpz_t mod;
-    fmpz_init(mod);
+    fmpz_t *moduli;
 
-    vtable->sk->init(&sk, lambda, kappa, nzs, 0, rng, false);
-    vtable->sk->plaintext_field(&sk, mod);
+    vtable->sk->init(&sk, lambda, kappa, nzs, NULL, 0, rng, false);
+    moduli = vtable->sk->plaintext_fields(&sk);
     pp = vtable->sk->pp(&sk);
 
     fmpz_mat_t zero_1, one_1, zero_2, one_2, rand, res;
@@ -141,10 +140,10 @@ static int test(const mmap_vtable *vtable, ulong lambda)
     mmap_enc_mat_mul(vtable, pp, result, one_enc_1, one_enc_2);
     ok &= expect("[1 1] * [1 0][0 1]", 0, vtable->enc->is_zero(result->m[0][1], pp));
 
-    _fmpz_mat_init_rand(rand, 2, rng, mod);
-    fmpz_layer_mul_right(zero_1, one_1, rand, mod);
-    fmpz_modp_matrix_inverse(rand, rand, 2, mod);
-    fmpz_layer_mul_left(zero_2, one_2, rand, mod);
+    _fmpz_mat_init_rand(rand, 2, rng, moduli[0]);
+    fmpz_layer_mul_right(zero_1, one_1, rand, moduli[0]);
+    fmpz_modp_matrix_inverse(rand, rand, 2, moduli[0]);
+    fmpz_layer_mul_left(zero_2, one_2, rand, moduli[0]);
 
     encode(vtable, &sk, zero_enc_1, zero_1, 0, 1, 2, rng);
     encode(vtable, &sk, one_enc_1,  one_1,  0, 1, 2, rng);
@@ -160,6 +159,8 @@ static int test(const mmap_vtable *vtable, ulong lambda)
     ok &= expect("[1 1] * [1 0][0 0]", 1, vtable->enc->is_zero(result->m[0][1], pp));
     mmap_enc_mat_mul(vtable, pp, result, one_enc_1, one_enc_2);
     ok &= expect("[1 1] * [1 0][0 1]", 0, vtable->enc->is_zero(result->m[0][1], pp));
+
+    free(moduli);
 
     return !ok;
 }

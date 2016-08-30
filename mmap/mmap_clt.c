@@ -61,9 +61,16 @@ static void clt_state_save_wrapper (const mmap_sk *const sk, FILE *const fp)
     clt_state_fsave(fp, &(sk->clt_self));
 }
 
-static void clt_state_get_modulus (const mmap_sk *const sk, fmpz_t p_out)
+static fmpz_t * clt_state_get_moduli (const mmap_sk *const sk)
 {
-    fmpz_set_mpz(p_out, sk->clt_self.gs[0]);
+    fmpz_t *moduli;
+
+    moduli = calloc(sk->clt_self.n, sizeof(fmpz_t));
+    for (size_t i = 0; i < sk->clt_self.n; ++i) {
+        fmpz_init(moduli[i]);
+        fmpz_set_mpz(moduli[i], sk->clt_self.gs[i]);
+    }
+    return moduli;
 }
 
 static const mmap_pp * clt_pp_init_wrapper (const mmap_sk *const sk)
@@ -79,7 +86,7 @@ static const mmap_sk_vtable clt_sk_vtable =
   , .fread  = clt_state_read_wrapper
   , .fwrite = clt_state_save_wrapper
   , .pp     = clt_pp_init_wrapper
-  , .plaintext_field = clt_state_get_modulus
+  , .plaintext_fields = clt_state_get_moduli
   , .size   = sizeof(clt_state)
   };
 

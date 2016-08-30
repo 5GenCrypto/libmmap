@@ -95,10 +95,17 @@ dummy_state_write(const mmap_sk *const sk, FILE *const fp)
     }
 }
 
-static void
-dummy_state_get_modulus(const mmap_sk *const sk, fmpz_t out)
+static fmpz_t *
+dummy_state_get_moduli(const mmap_sk *const sk)
 {
-    fmpz_set_mpz(out, sk->dummy_self.moduli[0]);
+    fmpz_t *moduli;
+
+    moduli = calloc(2, sizeof(fmpz_t));
+    for (int i = 0; i < 2; ++i) {
+        fmpz_init(moduli[i]);
+        fmpz_set_mpz(moduli[i], sk->dummy_self.moduli[i]);
+    }
+    return moduli;
 }
 
 static const mmap_sk_vtable dummy_sk_vtable =
@@ -108,7 +115,7 @@ static const mmap_sk_vtable dummy_sk_vtable =
   .fwrite = dummy_state_write,
   .pp = dummy_pp_init,
   .size = 0,
-  .plaintext_field = dummy_state_get_modulus,
+  .plaintext_fields = dummy_state_get_moduli,
 };
 
 static void

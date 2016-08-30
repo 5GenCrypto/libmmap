@@ -68,8 +68,16 @@ static const mmap_pp * gghlite_sk_to_pp(const mmap_sk *const sk)
  * standpoint. However it's almost certainly going to be fine with all the
  * compilers we care about... */
 { return (const mmap_pp *)sk->gghlite_self->params; }
-static void fmpz_poly_oz_ideal_norm_wrapper(const mmap_sk *const sk, fmpz_t p_out)
-{ fmpz_poly_oz_ideal_norm(p_out, sk->gghlite_self->g, sk->gghlite_self->params->n, 0); }
+
+static fmpz_t * fmpz_poly_oz_ideal_norm_wrapper(const mmap_sk *const sk)
+{
+    fmpz_t *moduli;
+
+    moduli = calloc(1, sizeof(fmpz_t));
+    fmpz_init(moduli[0]);
+    fmpz_poly_oz_ideal_norm(moduli[0], sk->gghlite_self->g, sk->gghlite_self->params->n, 0);
+    return moduli;
+}
 
 static const mmap_sk_vtable gghlite_sk_vtable =
 { .init = gghlite_jigsaw_init_gamma_wrapper
@@ -77,7 +85,7 @@ static const mmap_sk_vtable gghlite_sk_vtable =
   , .fread = fread_gghlite_sk_wrapper
   , .fwrite = fwrite_gghlite_sk_wrapper
   , .pp = gghlite_sk_to_pp
-  , .plaintext_field = fmpz_poly_oz_ideal_norm_wrapper
+  , .plaintext_fields = fmpz_poly_oz_ideal_norm_wrapper
   , .size = sizeof(mmap_sk)
 };
 

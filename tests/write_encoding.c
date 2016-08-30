@@ -10,8 +10,8 @@
 
 int main(int argc, char **argv)
 {
-    /*mmap_vtable *mmap = &clt_vtable;*/
-    mmap_vtable *mmap = &gghlite_vtable;
+    const mmap_vtable *const mmap = &clt_vtable;
+    /* const mmap_vtable *const mmap = &gghlite_vtable; */
 
     ulong lambda = atoi(argv[1]);
     ulong kappa  = atoi(argv[2]);
@@ -21,8 +21,8 @@ int main(int argc, char **argv)
     aes_randinit(rng);
 
     mmap_sk *sk = malloc(mmap->sk->size);
-    mmap->sk->init(sk, lambda, kappa, nzs, rng, false);
-    mmap_pp *pp = mmap->sk->pp(sk);
+    mmap->sk->init(sk, lambda, kappa, nzs, 1, rng, false);
+    const mmap_pp *const pp = mmap->sk->pp(sk);
 
     mmap_enc x;
     mmap->enc->init(&x, pp);
