@@ -147,7 +147,6 @@ static void
 dummy_enc_fread(mmap_enc *enc, FILE *const fp)
 {
     for (int i = 0; i < 2; ++i) {
-        mpz_init(enc->dummy_self.elems[i]);
         mpz_inp_raw(enc->dummy_self.elems[i], fp);
     }
 }
