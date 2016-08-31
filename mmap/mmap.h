@@ -26,7 +26,7 @@ typedef struct {
 struct mmap_pp {
     union {
         gghlite_params_t gghlite_self;
-        clt_pp clt_self;
+        clt_pp *clt_self;
         dummy_pp_t dummy_self;
     };
 };
@@ -35,7 +35,7 @@ typedef struct mmap_pp mmap_pp;
 struct mmap_sk {
     union {
         gghlite_sk_t gghlite_self;
-        clt_state clt_self;
+        clt_state *clt_self;
         dummy_sk_t dummy_self;
     };
 };

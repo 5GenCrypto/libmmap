@@ -3,31 +3,31 @@
 
 #include <gmp.h>
 
-static void clt_pp_clear_wrapper (mmap_pp *pp)
+static void clt_pp_clear_wrapper(mmap_pp *pp)
 {
-    clt_pp_clear(&(pp->clt_self));
+    clt_pp_delete(pp->clt_self);
 }
 
-static void clt_pp_read_wrapper (mmap_pp *const pp, FILE *const fp)
+static void clt_pp_fread_wrapper(mmap_pp *const pp, FILE *const fp)
 {
-    clt_pp_fread(fp, &(pp->clt_self));
+    pp->clt_self = clt_pp_fread(fp);
 }
 
-static void clt_pp_save_wrapper (const mmap_pp *const pp, FILE *const fp)
+static void clt_pp_fsave_wrapper(const mmap_pp *const pp, FILE *const fp)
 {
-    clt_pp_fsave(fp, &(pp->clt_self));
+    clt_pp_fwrite(pp->clt_self, fp);
 }
 
 static const mmap_pp_vtable clt_pp_vtable =
   { .clear  = clt_pp_clear_wrapper
-  , .fread  = clt_pp_read_wrapper
-  , .fwrite = clt_pp_save_wrapper
-  , .size   = sizeof(clt_pp)
+  , .fread  = clt_pp_fread_wrapper
+  , .fwrite = clt_pp_fsave_wrapper
+  , .size   = sizeof(clt_pp *)
   };
 
-static void clt_state_init_wrapper (mmap_sk *const sk, size_t lambda, size_t kappa,
-                                    size_t gamma, int *pows, unsigned long ncores,
-                                    aes_randstate_t rng, bool verbose)
+static void clt_state_init_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
+                                   size_t gamma, int *pows, unsigned long ncores,
+                                   aes_randstate_t rng, bool verbose)
 {
     bool new_pows = false;
     int flags = CLT_FLAG_OPT_CRT_TREE | CLT_FLAG_OPT_PARALLEL_ENCODE;
@@ -41,48 +41,51 @@ static void clt_state_init_wrapper (mmap_sk *const sk, size_t lambda, size_t kap
             pows[i] = 1;
         }
     }
-    clt_state_init(&sk->clt_self, kappa, lambda, gamma, pows, ncores, flags, rng);
+    sk->clt_self = clt_state_new(kappa, lambda, gamma, pows, ncores, flags, rng);
     if (new_pows)
         free(pows);
 }
 
-static void clt_state_clear_wrapper (mmap_sk *const sk)
+static void clt_state_clear_wrapper(mmap_sk *const sk)
 {
-    clt_state_clear(&(sk->clt_self));
+    clt_state_delete(sk->clt_self);
 }
 
-static void clt_state_read_wrapper (mmap_sk *const sk, FILE *const fp)
+static void clt_state_read_wrapper(mmap_sk *const sk, FILE *const fp)
 {
-    clt_state_fread(fp, &(sk->clt_self));
+    sk->clt_self = clt_state_fread(fp);
 }
 
-static void clt_state_save_wrapper (const mmap_sk *const sk, FILE *const fp)
+static void clt_state_save_wrapper(const mmap_sk *const sk, FILE *const fp)
 {
-    clt_state_fsave(fp, &(sk->clt_self));
+    clt_state_fwrite(sk->clt_self, fp);
 }
 
-static fmpz_t * clt_state_get_moduli (const mmap_sk *const sk)
+static fmpz_t * clt_state_get_moduli(const mmap_sk *const sk)
 {
-    fmpz_t *moduli;
+    mpz_t *moduli;
+    fmpz_t *fmoduli;
+    size_t nslots = clt_state_nslots(sk->clt_self);
 
-    moduli = calloc(sk->clt_self.n, sizeof(fmpz_t));
-    for (size_t i = 0; i < sk->clt_self.n; ++i) {
-        fmpz_init(moduli[i]);
-        fmpz_set_mpz(moduli[i], sk->clt_self.gs[i]);
+    moduli = clt_state_moduli(sk->clt_self);
+    fmoduli = calloc(nslots, sizeof(fmpz_t));
+    for (size_t i = 0; i < nslots; ++i) {
+        fmpz_init(fmoduli[i]);
+        fmpz_set_mpz(fmoduli[i], moduli[i]);
     }
-    return moduli;
+    return fmoduli;
 }
 
-static const mmap_pp * clt_pp_init_wrapper (const mmap_sk *const sk)
+static const mmap_pp * clt_pp_init_wrapper(const mmap_sk *const sk)
 {
     mmap_pp *pp = malloc(sizeof(mmap_pp));
-    clt_pp_init(&(pp->clt_self), &(sk->clt_self));
+    pp->clt_self = clt_pp_new(sk->clt_self);
     return pp;
 }
 
-static size_t clt_state_nslots (const mmap_sk *const sk)
+static size_t clt_state_nslots_wrapper(const mmap_sk *const sk)
 {
-    return sk->clt_self.n;
+    return clt_state_nslots(sk->clt_self);
 }
 
 static const mmap_sk_vtable clt_sk_vtable =
@@ -92,12 +95,13 @@ static const mmap_sk_vtable clt_sk_vtable =
   , .fwrite = clt_state_save_wrapper
   , .pp     = clt_pp_init_wrapper
   , .plaintext_fields = clt_state_get_moduli
-  , .nslots = clt_state_nslots
-  , .size   = sizeof(clt_state)
+  , .nslots = clt_state_nslots_wrapper
+  , .size   = sizeof(clt_state *)
   };
 
-static void clt_enc_init_wrapper (mmap_enc *const enc, const mmap_pp *const pp __attribute__ ((unused)))
+static void clt_enc_init_wrapper (mmap_enc *const enc, const mmap_pp *const pp)
 {
+    (void) pp;
     clt_elem_init(enc->clt_self);
 }
 
@@ -124,27 +128,27 @@ static void clt_enc_set_wrapper (mmap_enc *const dest, const mmap_enc *const src
 
 static void clt_enc_add_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
 {
-    clt_elem_add(dest->clt_self, &pp->clt_self, a->clt_self, b->clt_self);
+    clt_elem_add(dest->clt_self, pp->clt_self, a->clt_self, b->clt_self);
 }
 
 static void clt_enc_sub_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
 {
-    clt_elem_sub(dest->clt_self, &pp->clt_self, a->clt_self, b->clt_self);
+    clt_elem_sub(dest->clt_self, pp->clt_self, a->clt_self, b->clt_self);
 }
 
 static void clt_enc_mul_wrapper (mmap_enc *const dest, const mmap_pp *const pp, const mmap_enc *const a, const mmap_enc *const b)
 {
-    clt_elem_mul(dest->clt_self, &pp->clt_self, a->clt_self, b->clt_self);
+    clt_elem_mul(dest->clt_self, pp->clt_self, a->clt_self, b->clt_self);
 }
 
 static bool clt_enc_is_zero_wrapper (const mmap_enc *const enc, const mmap_pp *const pp)
 {
-    return clt_is_zero(&pp->clt_self, enc->clt_self);
+    return clt_is_zero(enc->clt_self, pp->clt_self);
 }
 
 static void
-clt_encode_wrapper (mmap_enc *const enc, const mmap_sk *const sk, int n,
-                    const fmpz_t *plaintext, int *group)
+clt_encode_wrapper(mmap_enc *const enc, const mmap_sk *const sk, int n,
+                   const fmpz_t *plaintext, int *group)
 {
     mpz_t *ins;
 
@@ -153,7 +157,7 @@ clt_encode_wrapper (mmap_enc *const enc, const mmap_sk *const sk, int n,
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
-    clt_encode(enc->clt_self, &sk->clt_self, n, ins, group);
+    clt_encode(enc->clt_self, sk->clt_self, n, ins, group);
     for (int i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }
