@@ -73,6 +73,7 @@ typedef struct {
     const mmap_pp * (*const pp)(const mmap_sk *const sk);
     fmpz_t * (*const plaintext_fields)(const mmap_sk *const sk);
     size_t (*const nslots)(const mmap_sk *const sk);
+    size_t (*const nzs)(const mmap_sk *const sk);
     const size_t size;
 } mmap_sk_vtable;
 
