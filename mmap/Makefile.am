@@ -1,6 +1,6 @@
 lib_LTLIBRARIES=libmmap.la
 
-libmmap_la_LDFLAGS = -noundefined -version-info 0:0:0
+libmmap_la_LDFLAGS = -no-undefined -version-info 0:0:0
 libmmap_la_CFLAGS = $(COMMON_CFLAGS) $(EXTRA_CFLAGS) -I$(top_srcdir) -fopenmp
 libmmap_la_LIBADD = -lgomp
 

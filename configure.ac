@@ -49,8 +49,8 @@ AC_SEARCH_LIBS(__gmpz_init,gmp)
 if test "x$ac_cv_search___gmpz_init" = "xno"; then
   AC_MSG_ERROR([libgmp not found])
 fi
-AC_SEARCH_LIBS(clt_state_init,clt13)
-if test "x$ac_cv_search_clt_state_init" = "xno"; then
+AC_SEARCH_LIBS(clt_state_new,clt13)
+if test "x$ac_cv_search_clt_state_new" = "xno"; then
   AC_MSG_ERROR([libclt13 not found])
 fi
 AC_SEARCH_LIBS(gghlite_init,gghlite)
