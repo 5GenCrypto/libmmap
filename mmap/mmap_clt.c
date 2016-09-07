@@ -25,10 +25,12 @@ static const mmap_pp_vtable clt_pp_vtable =
   , .size   = sizeof(clt_pp *)
   };
 
-static void clt_state_init_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
-                                   size_t gamma, int *pows, size_t ncores,
-                                   aes_randstate_t rng, bool verbose)
+static int
+clt_state_init_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
+                       size_t nslots, size_t gamma, int *pows, size_t ncores,
+                       aes_randstate_t rng, bool verbose)
 {
+    int ret = MMAP_OK;
     bool new_pows = false;
     int flags = CLT_FLAG_OPT_CRT_TREE | CLT_FLAG_OPT_PARALLEL_ENCODE;
     if (verbose)
@@ -41,9 +43,13 @@ static void clt_state_init_wrapper(mmap_sk *const sk, size_t lambda, size_t kapp
             pows[i] = 1;
         }
     }
-    sk->clt_self = clt_state_new(kappa, lambda, gamma, pows, ncores, flags, rng);
+    sk->clt_self = clt_state_new(kappa, lambda, nslots, gamma, pows, ncores,
+                                 flags, rng);
+    if (sk->clt_self == NULL)
+        ret = MMAP_ERR;
     if (new_pows)
         free(pows);
+    return ret;
 }
 
 static void clt_state_clear_wrapper(mmap_sk *const sk)
@@ -88,6 +94,11 @@ static size_t clt_state_nslots_wrapper(const mmap_sk *const sk)
     return clt_state_nslots(sk->clt_self);
 }
 
+static size_t clt_state_nzs_wrapper(const mmap_sk *const sk)
+{
+    return clt_state_nzs(sk->clt_self);
+}
+
 static const mmap_sk_vtable clt_sk_vtable =
   { .init   = clt_state_init_wrapper
   , .clear  = clt_state_clear_wrapper
@@ -96,6 +107,7 @@ static const mmap_sk_vtable clt_sk_vtable =
   , .pp     = clt_pp_init_wrapper
   , .plaintext_fields = clt_state_get_moduli
   , .nslots = clt_state_nslots_wrapper
+  , .nzs = clt_state_nzs_wrapper
   , .size   = sizeof(clt_state *)
   };
 
@@ -147,18 +159,18 @@ static bool clt_enc_is_zero_wrapper (const mmap_enc *const enc, const mmap_pp *c
 }
 
 static void
-clt_encode_wrapper(mmap_enc *const enc, const mmap_sk *const sk, int n,
+clt_encode_wrapper(mmap_enc *const enc, const mmap_sk *const sk, size_t n,
                    const fmpz_t *plaintext, int *group)
 {
     mpz_t *ins;
 
     ins = calloc(n, sizeof(mpz_t));
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
     clt_encode(enc->clt_self, sk->clt_self, n, ins, group);
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }
     free(ins);

@@ -43,18 +43,27 @@ static const mmap_pp_vtable gghlite_pp_vtable =
   , .size = sizeof(mmap_pp)
 };
 
-static void
+static int
 gghlite_jigsaw_init_gamma_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
-                                  size_t gamma, int *pows __attribute__ ((unused)),
-                                  unsigned long ncores __attribute__ ((unused)),
-                                  aes_randstate_t randstate, bool verbose)
+                                  size_t nslots, size_t gamma, int *pows,
+                                  unsigned long ncores, aes_randstate_t randstate,
+                                  bool verbose)
 {
-    gghlite_flag_t flags = GGHLITE_FLAGS_GOOD_G_INV;
+    (void) pows, (void) ncores;
+    gghlite_flag_t flags;
+
+    if (nslots > 1) {
+        fprintf(stderr, "Error: gghlite only supports a single slot\n");
+        return MMAP_ERR;
+    }
+    flags = GGHLITE_FLAGS_GOOD_G_INV;
     if (verbose)
         flags |= GGHLITE_FLAGS_VERBOSE;
     else
         flags |= GGHLITE_FLAGS_QUIET;
-    gghlite_jigsaw_init_gamma(sk->gghlite_self, lambda, kappa, gamma, flags, randstate);
+    gghlite_jigsaw_init_gamma(sk->gghlite_self, lambda, kappa, gamma, flags,
+                              randstate);
+    return MMAP_OK;
 }
 
 static void gghlite_sk_clear_wrapper(mmap_sk *const sk)
@@ -137,9 +146,10 @@ static bool gghlite_enc_is_zero_wrapper(const mmap_enc *const enc, const mmap_pp
 
 static void
 gghlite_enc_set_gghlite_clr_wrapper(mmap_enc *const enc,
-                                    const mmap_sk *const sk, int n __attribute__ ((unused)),
+                                    const mmap_sk *const sk, size_t n,
                                     const fmpz_t *plaintext, int *group)
 {
+    (void) n;
     gghlite_clr_t e;
     gghlite_clr_init(e);
     fmpz_poly_set_coeff_fmpz(e, 0, plaintext[0]);
