@@ -14,26 +14,15 @@
 extern "C" {
 #endif
 
-/* structs for dummy mmap */
-typedef struct {
-    mpz_t *moduli;
-    size_t nslots;
-} dummy_pp_t;
-typedef struct {
-    mpz_t *moduli;
-    size_t nslots;
-} dummy_sk_t;
-typedef struct {
-    mpz_t *elems;
-    size_t nslots;
-} dummy_enc_t;
-/* end structs for dummy mmap */
+typedef struct dummy_pp_t dummy_pp_t;
+typedef struct dummy_sk_t dummy_sk_t;
+typedef struct dummy_enc_t dummy_enc_t;
 
 struct mmap_pp {
     union {
         gghlite_params_t gghlite_self;
         clt_pp *clt_self;
-        dummy_pp_t dummy_self;
+        dummy_pp_t *dummy_self;
     };
 };
 typedef struct mmap_pp mmap_pp;
@@ -42,7 +31,7 @@ struct mmap_sk {
     union {
         gghlite_sk_t gghlite_self;
         clt_state *clt_self;
-        dummy_sk_t dummy_self;
+        dummy_sk_t *dummy_self;
     };
 };
 typedef struct mmap_sk mmap_sk;
@@ -51,7 +40,7 @@ struct mmap_enc {
     union {
         gghlite_enc_t gghlite_self;
         clt_elem_t clt_self;
-        dummy_enc_t dummy_self;
+        dummy_enc_t *dummy_self;
     };
 };
 typedef struct mmap_enc mmap_enc;

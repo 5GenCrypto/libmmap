@@ -1,36 +1,55 @@
 #include "mmap.h"
 
+struct dummy_pp_t {
+    mpz_t *moduli;
+    size_t nslots;
+};
+struct dummy_sk_t {
+    mpz_t *moduli;
+    size_t nslots;
+    size_t nzs;
+};
+struct dummy_enc_t {
+    mpz_t *elems;
+    size_t nslots;
+};
+
+#define my(sk) (sk)->dummy_self
+
 static const mmap_pp *
 dummy_pp_init(const mmap_sk *const sk)
 {
     mmap_pp *pp = calloc(1, sizeof(mmap_pp));
-    pp->dummy_self.moduli = calloc(sk->dummy_self.nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < sk->dummy_self.nslots; ++i) {
-        mpz_init(pp->dummy_self.moduli[i]);
-        mpz_set(pp->dummy_self.moduli[i], sk->dummy_self.moduli[i]);
+    my(pp) = calloc(1, sizeof(dummy_pp_t));
+    my(pp)->moduli = calloc(my(sk)->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < my(sk)->nslots; ++i) {
+        mpz_init(my(pp)->moduli[i]);
+        mpz_set(my(pp)->moduli[i], my(sk)->moduli[i]);
     }
-    pp->dummy_self.nslots = sk->dummy_self.nslots;
+    my(pp)->nslots = my(sk)->nslots;
     return pp;
 }
 
 static void
 dummy_pp_clear(mmap_pp *pp)
 {
-    for (size_t i = 0; i < pp->dummy_self.nslots; ++i) {
-        mpz_clear(pp->dummy_self.moduli[i]);
+    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+        mpz_clear(my(pp)->moduli[i]);
     }
-    free(pp->dummy_self.moduli);
+    free(my(pp)->moduli);
+    free(my(pp));
     free(pp);
 }
 
 static void
 dummy_pp_read(mmap_pp *const pp, FILE *const fp)
 {
-    fscanf(fp, "%lu\n", &pp->dummy_self.nslots);
-    pp->dummy_self.moduli = calloc(pp->dummy_self.nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < pp->dummy_self.nslots; ++i) {
-        mpz_init(pp->dummy_self.moduli[i]);
-        mpz_inp_raw(pp->dummy_self.moduli[i], fp);
+    my(pp) = calloc(1, sizeof(dummy_pp_t));
+    fscanf(fp, "%lu\n", &my(pp)->nslots);
+    my(pp)->moduli = calloc(my(pp)->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+        mpz_init(my(pp)->moduli[i]);
+        mpz_inp_raw(my(pp)->moduli[i], fp);
         (void) fscanf(fp, "\n");
     }
 }
@@ -38,9 +57,9 @@ dummy_pp_read(mmap_pp *const pp, FILE *const fp)
 static void
 dummy_pp_write(const mmap_pp *const pp, FILE *const fp)
 {
-    fprintf(fp, "%lu\n", pp->dummy_self.nslots);
-    for (size_t i = 0; i < pp->dummy_self.nslots; ++i) {
-        mpz_out_raw(fp, pp->dummy_self.moduli[i]);
+    fprintf(fp, "%lu\n", my(pp)->nslots);
+    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+        mpz_out_raw(fp, my(pp)->moduli[i]);
         (void) fprintf(fp, "\n");
     }
 }
@@ -57,35 +76,38 @@ dummy_state_init(mmap_sk *const sk, size_t lambda, size_t kappa, size_t nslots,
                  size_t gamma, int *pows, unsigned long ncores,
                  aes_randstate_t rng, bool verbose)
 {
-    (void) kappa, (void) gamma, (void) pows, (void) ncores, (void) verbose;
+    (void) kappa, (void) pows, (void) ncores, (void) verbose;
     if (nslots == 0)
         nslots = 1;
-    sk->dummy_self.moduli = calloc(nslots, sizeof(mpz_t));
+    my(sk) = malloc(sizeof(dummy_sk_t));
+    my(sk)->moduli = calloc(nslots, sizeof(mpz_t));
     for (size_t i = 0; i < nslots; ++i) {
-        mpz_init(sk->dummy_self.moduli[i]);
-        mpz_urandomb_aes(sk->dummy_self.moduli[i], rng, lambda);
+        mpz_init(my(sk)->moduli[i]);
+        mpz_urandomb_aes(my(sk)->moduli[i], rng, lambda);
     }
-    sk->dummy_self.nslots = nslots;
+    my(sk)->nslots = nslots;
+    my(sk)->nzs = gamma;
     return MMAP_OK;
 }
 
 static void
 dummy_state_clear(mmap_sk *const sk)
 {
-    for (size_t i = 0; i < sk->dummy_self.nslots; ++i) {
-        mpz_clear(sk->dummy_self.moduli[i]);
+    for (size_t i = 0; i < my(sk)->nslots; ++i) {
+        mpz_clear(my(sk)->moduli[i]);
     }
-    free(sk->dummy_self.moduli);
+    free(my(sk)->moduli);
 }
 
 static void
 dummy_state_read(mmap_sk *const sk, FILE *const fp)
 {
-    (void) fscanf(fp, "%lu\n", &sk->dummy_self.nslots);
-    sk->dummy_self.moduli = calloc(sk->dummy_self.nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < sk->dummy_self.nslots; ++i) {
-        mpz_init(sk->dummy_self.moduli[i]);
-        mpz_inp_raw(sk->dummy_self.moduli[i], fp);
+    my(sk) = calloc(1, sizeof(dummy_sk_t));
+    (void) fscanf(fp, "%lu\n", &my(sk)->nslots);
+    my(sk)->moduli = calloc(my(sk)->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < my(sk)->nslots; ++i) {
+        mpz_init(my(sk)->moduli[i]);
+        mpz_inp_raw(my(sk)->moduli[i], fp);
         (void) fscanf(fp, "\n");
     }
 }
@@ -93,9 +115,9 @@ dummy_state_read(mmap_sk *const sk, FILE *const fp)
 static void
 dummy_state_write(const mmap_sk *const sk, FILE *const fp)
 {
-    (void) fprintf(fp, "%lu\n", sk->dummy_self.nslots);
-    for (size_t i = 0; i < sk->dummy_self.nslots; ++i) {
-        mpz_out_raw(fp, sk->dummy_self.moduli[i]);
+    (void) fprintf(fp, "%lu\n", my(sk)->nslots);
+    for (size_t i = 0; i < my(sk)->nslots; ++i) {
+        mpz_out_raw(fp, my(sk)->moduli[i]);
         (void) fprintf(fp, "\n");
     }
 }
@@ -105,10 +127,10 @@ dummy_state_get_moduli(const mmap_sk *const sk)
 {
     fmpz_t *moduli;
 
-    moduli = calloc(sk->dummy_self.nslots, sizeof(fmpz_t));
-    for (size_t i = 0; i < sk->dummy_self.nslots; ++i) {
+    moduli = calloc(my(sk)->nslots, sizeof(fmpz_t));
+    for (size_t i = 0; i < my(sk)->nslots; ++i) {
         fmpz_init(moduli[i]);
-        fmpz_set_mpz(moduli[i], sk->dummy_self.moduli[i]);
+        fmpz_set_mpz(moduli[i], my(sk)->moduli[i]);
     }
     return moduli;
 }
@@ -116,14 +138,13 @@ dummy_state_get_moduli(const mmap_sk *const sk)
 static size_t
 dummy_state_nslots(const mmap_sk *const sk)
 {
-    return sk->dummy_self.nslots;
+    return my(sk)->nslots;
 }
 
 static size_t
 dummy_state_nzs(const mmap_sk *const sk)
 {
-    (void) sk;
-    return 50;                  /* TODO: fixme */
+    return my(sk)->nzs;
 }
 
 static const mmap_sk_vtable dummy_sk_vtable =
@@ -141,47 +162,50 @@ static const mmap_sk_vtable dummy_sk_vtable =
 static void
 dummy_enc_init(mmap_enc *const enc, const mmap_pp *const pp)
 {
-    enc->dummy_self.elems = calloc(pp->dummy_self.nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < pp->dummy_self.nslots; ++i) {
-        mpz_init(enc->dummy_self.elems[i]);
+    my(enc) = calloc(1, sizeof(dummy_enc_t));
+    my(enc)->elems = calloc(my(pp)->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+        mpz_init(my(enc)->elems[i]);
     }
-    enc->dummy_self.nslots = pp->dummy_self.nslots;
+    my(enc)->nslots = my(pp)->nslots;
 }
 
 static void
 dummy_enc_clear(mmap_enc *const enc)
 {
-    for (size_t i = 0; i < enc->dummy_self.nslots; ++i) {
-        mpz_clear(enc->dummy_self.elems[i]);
+    for (size_t i = 0; i < my(enc)->nslots; ++i) {
+        mpz_clear(my(enc)->elems[i]);
     }
+    free(my(enc)->elems);
+    free(my(enc));
 }
 
 static void
 dummy_enc_fread(mmap_enc *enc, FILE *const fp)
 {
-    for (size_t i = 0; i < enc->dummy_self.nslots; ++i) {
-        mpz_inp_raw(enc->dummy_self.elems[i], fp);
+    for (size_t i = 0; i < my(enc)->nslots; ++i) {
+        mpz_inp_raw(my(enc)->elems[i], fp);
         (void) fscanf(fp, "\n");
     }
-    (void) fscanf(fp, "%lu\n", &enc->dummy_self.nslots);
+    (void) fscanf(fp, "%lu\n", &my(enc)->nslots);
 }
 
 static void
 dummy_enc_fwrite(const mmap_enc *const enc, FILE *const fp)
 {
-    for (size_t i = 0; i < enc->dummy_self.nslots; ++i) {
-        mpz_out_raw(fp, enc->dummy_self.elems[i]);
+    for (size_t i = 0; i < my(enc)->nslots; ++i) {
+        mpz_out_raw(fp, my(enc)->elems[i]);
         (void) fprintf(fp, "\n");
     }
-    (void) fprintf(fp, "%lu\n", enc->dummy_self.nslots);
+    (void) fprintf(fp, "%lu\n", my(enc)->nslots);
 }
 
 static void
 dummy_enc_set(mmap_enc *const dest, const mmap_enc *const src)
 {
-    assert(src->dummy_self.nslots == dest->dummy_self.nslots);
-    for (size_t i = 0; i < dest->dummy_self.nslots; ++i) {
-        mpz_set(dest->dummy_self.elems[i], src->dummy_self.elems[i]);
+    assert(src->dummy_self.nslots == my(dest)->nslots);
+    for (size_t i = 0; i < my(dest)->nslots; ++i) {
+        mpz_set(my(dest)->elems[i], my(src)->elems[i]);
     }
 }
 
@@ -189,9 +213,9 @@ static void
 dummy_enc_add(mmap_enc *const dest, const mmap_pp *const pp,
               const mmap_enc *const a, const mmap_enc *const b)
 {
-    for (size_t i = 0; i < pp->dummy_self.nslots; ++i) {
-        mpz_add(dest->dummy_self.elems[i], a->dummy_self.elems[i], b->dummy_self.elems[i]);
-        mpz_mod(dest->dummy_self.elems[i], dest->dummy_self.elems[i], pp->dummy_self.moduli[i]);
+    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+        mpz_add(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
+        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
     }
 }
 
@@ -199,9 +223,9 @@ static void
 dummy_enc_sub(mmap_enc *const dest, const mmap_pp *const pp,
               const mmap_enc *const a, const mmap_enc *const b)
 {
-    for (size_t i = 0; i < pp->dummy_self.nslots; ++i) {
-        mpz_sub(dest->dummy_self.elems[i], a->dummy_self.elems[i], b->dummy_self.elems[i]);
-        mpz_mod(dest->dummy_self.elems[i], dest->dummy_self.elems[i], pp->dummy_self.moduli[i]);
+    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+        mpz_sub(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
+        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
     }
 }
 
@@ -209,9 +233,9 @@ static void
 dummy_enc_mul(mmap_enc *const dest, const mmap_pp *const pp,
               const mmap_enc *const a, const mmap_enc *const b)
 {
-    for (size_t i = 0; i < pp->dummy_self.nslots; ++i) {
-        mpz_mul(dest->dummy_self.elems[i], a->dummy_self.elems[i], b->dummy_self.elems[i]);
-        mpz_mod(dest->dummy_self.elems[i], dest->dummy_self.elems[i], pp->dummy_self.moduli[i]);
+    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+        mpz_mul(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
+        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
     }
 }
 
@@ -219,8 +243,8 @@ static bool
 dummy_enc_is_zero(const mmap_enc *const enc, const mmap_pp *const pp)
 {
     bool ret = true;
-    for (size_t i = 0; i < pp->dummy_self.nslots; ++i) {
-        ret &= mpz_cmp_ui(enc->dummy_self.elems[i], 0) == 0;
+    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+        ret &= mpz_cmp_ui(my(enc)->elems[i], 0) == 0;
     }
     return ret;
 }
@@ -230,9 +254,9 @@ dummy_encode(mmap_enc *const enc, const mmap_sk *const sk,
              size_t n, const fmpz_t *plaintext, int *group)
 {
     (void) sk, (void) group;
-    assert(n <= sk->dummy_self.nslots);
+    assert(n <= my(sk)->nslots);
     for (size_t i = 0; i < n; ++i) {
-        fmpz_get_mpz(enc->dummy_self.elems[i], plaintext[i]);        
+        fmpz_get_mpz(my(enc)->elems[i], plaintext[i]);        
     }
 }
 
