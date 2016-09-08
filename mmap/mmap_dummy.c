@@ -256,7 +256,7 @@ dummy_encode(mmap_enc *const enc, const mmap_sk *const sk,
     (void) sk, (void) group;
     assert(n <= my(sk)->nslots);
     for (size_t i = 0; i < n; ++i) {
-        fmpz_get_mpz(my(enc)->elems[i], plaintext[i]);        
+        fmpz_get_mpz(my(enc)->elems[i], plaintext[i]);
     }
 }
 
