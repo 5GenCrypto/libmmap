@@ -203,7 +203,7 @@ dummy_enc_fwrite(const mmap_enc *const enc, FILE *const fp)
 static void
 dummy_enc_set(mmap_enc *const dest, const mmap_enc *const src)
 {
-    assert(src->dummy_self.nslots == my(dest)->nslots);
+    assert(src->dummy_self->nslots == my(dest)->nslots);
     for (size_t i = 0; i < my(dest)->nslots; ++i) {
         mpz_set(my(dest)->elems[i], my(src)->elems[i]);
     }
