@@ -84,6 +84,7 @@ dummy_state_init(mmap_sk *const sk, size_t lambda, size_t kappa, size_t nslots,
     for (size_t i = 0; i < nslots; ++i) {
         mpz_init(my(sk)->moduli[i]);
         mpz_urandomb_aes(my(sk)->moduli[i], rng, lambda);
+        mpz_nextprime(my(sk)->moduli[i], my(sk)->moduli[i]);
     }
     my(sk)->nslots = nslots;
     my(sk)->nzs = gamma;
