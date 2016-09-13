@@ -97,6 +97,7 @@ dummy_state_clear(mmap_sk *const sk)
         mpz_clear(my(sk)->moduli[i]);
     }
     free(my(sk)->moduli);
+    free(my(sk));
 }
 
 static void
