@@ -43,7 +43,7 @@ clt_state_init_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
             pows[i] = 1;
         }
     }
-    sk->clt_self = clt_state_new(kappa, lambda, nslots, gamma, pows, ncores,
+    sk->clt_self = clt_state_new(kappa, lambda, gamma, pows, nslots, ncores,
                                  flags, rng);
     if (sk->clt_self == NULL)
         ret = MMAP_ERR;
