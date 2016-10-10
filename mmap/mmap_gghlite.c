@@ -45,7 +45,7 @@ static const mmap_pp_vtable gghlite_pp_vtable =
 
 static int
 gghlite_jigsaw_init_gamma_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
-                                  size_t nslots, size_t gamma, int *pows,
+                                  size_t gamma, int *pows, size_t nslots,
                                   unsigned long ncores, aes_randstate_t randstate,
                                   bool verbose)
 {

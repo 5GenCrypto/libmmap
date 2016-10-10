@@ -27,7 +27,7 @@ static const mmap_pp_vtable clt_pp_vtable =
 
 static int
 clt_state_init_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
-                       size_t nslots, size_t gamma, int *pows, size_t ncores,
+                       size_t gamma, int *pows, size_t nslots, size_t ncores,
                        aes_randstate_t rng, bool verbose)
 {
     int ret = MMAP_OK;

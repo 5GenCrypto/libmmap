@@ -72,8 +72,8 @@ static const mmap_pp_vtable dummy_pp_vtable =
 };
 
 static int
-dummy_state_init(mmap_sk *const sk, size_t lambda, size_t kappa, size_t nslots,
-                 size_t gamma, int *pows, unsigned long ncores,
+dummy_state_init(mmap_sk *const sk, size_t lambda, size_t kappa, 
+                 size_t gamma, int *pows, size_t nslots, size_t ncores,
                  aes_randstate_t rng, bool verbose)
 {
     (void) kappa, (void) pows, (void) ncores, (void) verbose;
