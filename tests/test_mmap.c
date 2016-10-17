@@ -33,7 +33,7 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
         pows[i] = 1;
 
     sk = malloc(mmap->sk->size);
-    mmap->sk->init(sk, lambda, kappa, 0, nzs, pows, 0, rng, true);
+    mmap->sk->init(sk, lambda, kappa, nzs, pows, 0, 0, rng, true);
 
     {
         // test initialization & serialization
