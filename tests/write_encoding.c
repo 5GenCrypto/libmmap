@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     aes_randinit(rng);
 
     mmap_sk *sk = malloc(mmap->sk->size);
-    mmap->sk->init(sk, lambda, kappa, nzs, 1, rng, false);
+    mmap->sk->init(sk, lambda, kappa, nzs, NULL, 0, 1, rng, false);
     const mmap_pp *const pp = mmap->sk->pp(sk);
 
     mmap_enc x;
@@ -37,11 +37,11 @@ int main(int argc, char **argv)
         }
 
         if (i == 0) {
-            mmap->enc->encode(&x, sk, 1, pt, ix, rng);
+            mmap->enc->encode(&x, sk, 1, pt, ix);
         } else {
             mmap_enc y;
             mmap->enc->init(&y, pp);
-            mmap->enc->encode(&y, sk, 1, pt, ix, rng);
+            mmap->enc->encode(&y, sk, 1, pt, ix);
             mmap->enc->mul(&x, pp, &x, &y);
         }
     }
