@@ -294,6 +294,7 @@ void fread_gghlite_sk(FILE *fp, gghlite_sk_t gghlite_self) {
     gghlite_sk_set_D_g(gghlite_self);
     timer_printf("Finished setting D_g %8.2fs\n",
                  ggh_seconds(ggh_walltime(t)));
+    aes_randstate_fread(gghlite_self->rng, fp);
 }
 
 void fwrite_gghlite_sk(FILE *fp, const gghlite_sk_t gghlite_self) {
@@ -332,6 +333,7 @@ void fwrite_gghlite_sk(FILE *fp, const gghlite_sk_t gghlite_self) {
     timer_printf("\n");
     timer_printf("Finished writing z, z_inv, a, b %8.2fs\n",
                  ggh_seconds(ggh_walltime(t)));
+    aes_randstate_fwrite(gghlite_self->rng, fp);
 }
 
 static int fmpz_poly_fread_raw(FILE * file, fmpz_poly_t poly)
