@@ -185,6 +185,7 @@ dummy_enc_clear(mmap_enc *const enc)
 static void
 dummy_enc_fread(mmap_enc *enc, FILE *const fp)
 {
+    my(enc) = calloc(1, sizeof(dummy_enc_t));
     (void) fscanf(fp, "%lu\n", &my(enc)->nslots);
     for (size_t i = 0; i < my(enc)->nslots; ++i) {
         mpz_inp_raw(my(enc)->elems[i], fp);
