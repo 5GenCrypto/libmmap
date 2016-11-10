@@ -185,21 +185,21 @@ dummy_enc_clear(mmap_enc *const enc)
 static void
 dummy_enc_fread(mmap_enc *enc, FILE *const fp)
 {
+    (void) fscanf(fp, "%lu\n", &my(enc)->nslots);
     for (size_t i = 0; i < my(enc)->nslots; ++i) {
         mpz_inp_raw(my(enc)->elems[i], fp);
         (void) fscanf(fp, "\n");
     }
-    (void) fscanf(fp, "%lu\n", &my(enc)->nslots);
 }
 
 static void
 dummy_enc_fwrite(const mmap_enc *const enc, FILE *const fp)
 {
+    (void) fprintf(fp, "%lu\n", my(enc)->nslots);
     for (size_t i = 0; i < my(enc)->nslots; ++i) {
         mpz_out_raw(fp, my(enc)->elems[i]);
         (void) fprintf(fp, "\n");
     }
-    (void) fprintf(fp, "%lu\n", my(enc)->nslots);
 }
 
 static void
