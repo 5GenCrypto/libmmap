@@ -3,18 +3,22 @@
 struct dummy_pp_t {
     mpz_t *moduli;
     size_t nslots;
+    size_t kappa;
 };
 struct dummy_sk_t {
     mpz_t *moduli;
     size_t nslots;
     size_t nzs;
+    size_t kappa;
 };
 struct dummy_enc_t {
     mpz_t *elems;
+    size_t degree;
     size_t nslots;
 };
 
 #define my(sk) (sk)->dummy_self
+#define max(a, b) (a) > (b) ? (a) : (b)
 
 static const mmap_pp *
 dummy_pp_init(const mmap_sk *const sk)
@@ -27,6 +31,7 @@ dummy_pp_init(const mmap_sk *const sk)
         mpz_set(my(pp)->moduli[i], my(sk)->moduli[i]);
     }
     my(pp)->nslots = my(sk)->nslots;
+    my(pp)->kappa = my(sk)->kappa;
     return pp;
 }
 
@@ -45,6 +50,7 @@ static void
 dummy_pp_read(mmap_pp *const pp, FILE *const fp)
 {
     my(pp) = calloc(1, sizeof(dummy_pp_t));
+    fscanf(fp, "%lu\n", &my(pp)->kappa);
     fscanf(fp, "%lu\n", &my(pp)->nslots);
     my(pp)->moduli = calloc(my(pp)->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < my(pp)->nslots; ++i) {
@@ -57,6 +63,7 @@ dummy_pp_read(mmap_pp *const pp, FILE *const fp)
 static void
 dummy_pp_write(const mmap_pp *const pp, FILE *const fp)
 {
+    fprintf(fp, "%lu\n", my(pp)->kappa);
     fprintf(fp, "%lu\n", my(pp)->nslots);
     for (size_t i = 0; i < my(pp)->nslots; ++i) {
         mpz_out_raw(fp, my(pp)->moduli[i]);
@@ -76,7 +83,7 @@ dummy_state_init(mmap_sk *const sk, size_t lambda, size_t kappa,
                  size_t gamma, int *pows, size_t nslots, size_t ncores,
                  aes_randstate_t rng, bool verbose)
 {
-    (void) kappa, (void) pows, (void) ncores, (void) verbose;
+    (void) pows, (void) ncores, (void) verbose;
     if (nslots == 0)
         nslots = 1;
     my(sk) = malloc(sizeof(dummy_sk_t));
@@ -88,6 +95,7 @@ dummy_state_init(mmap_sk *const sk, size_t lambda, size_t kappa,
     }
     my(sk)->nslots = nslots;
     my(sk)->nzs = gamma;
+    my(sk)->kappa = kappa;
     return MMAP_OK;
 }
 
@@ -105,6 +113,7 @@ static void
 dummy_state_read(mmap_sk *const sk, FILE *const fp)
 {
     my(sk) = calloc(1, sizeof(dummy_sk_t));
+    (void) fscanf(fp, "%lu\n", &my(sk)->kappa);
     (void) fscanf(fp, "%lu\n", &my(sk)->nslots);
     my(sk)->moduli = calloc(my(sk)->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < my(sk)->nslots; ++i) {
@@ -117,6 +126,7 @@ dummy_state_read(mmap_sk *const sk, FILE *const fp)
 static void
 dummy_state_write(const mmap_sk *const sk, FILE *const fp)
 {
+    (void) fprintf(fp, "%lu\n", my(sk)->kappa);
     (void) fprintf(fp, "%lu\n", my(sk)->nslots);
     for (size_t i = 0; i < my(sk)->nslots; ++i) {
         mpz_out_raw(fp, my(sk)->moduli[i]);
@@ -170,6 +180,7 @@ dummy_enc_init(mmap_enc *const enc, const mmap_pp *const pp)
         mpz_init(my(enc)->elems[i]);
     }
     my(enc)->nslots = my(pp)->nslots;
+    my(enc)->degree = 0;        /* Set when encoding */
 }
 
 static void
@@ -186,6 +197,7 @@ static void
 dummy_enc_fread(mmap_enc *enc, FILE *const fp)
 {
     my(enc) = calloc(1, sizeof(dummy_enc_t));
+    (void) fscanf(fp, "%lu\n", &my(enc)->degree);
     (void) fscanf(fp, "%lu\n", &my(enc)->nslots);
     my(enc)->elems = calloc(my(enc)->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < my(enc)->nslots; ++i) {
@@ -198,6 +210,7 @@ dummy_enc_fread(mmap_enc *enc, FILE *const fp)
 static void
 dummy_enc_fwrite(const mmap_enc *const enc, FILE *const fp)
 {
+    (void) fprintf(fp, "%lu\n", my(enc)->degree);
     (void) fprintf(fp, "%lu\n", my(enc)->nslots);
     for (size_t i = 0; i < my(enc)->nslots; ++i) {
         mpz_out_raw(fp, my(enc)->elems[i]);
@@ -208,7 +221,8 @@ dummy_enc_fwrite(const mmap_enc *const enc, FILE *const fp)
 static void
 dummy_enc_set(mmap_enc *const dest, const mmap_enc *const src)
 {
-    assert(src->dummy_self->nslots == my(dest)->nslots);
+    assert(my(dest)->nslots == my(src)->nslots);
+    my(dest)->degree = my(src)->degree;
     for (size_t i = 0; i < my(dest)->nslots; ++i) {
         mpz_set(my(dest)->elems[i], my(src)->elems[i]);
     }
@@ -218,6 +232,10 @@ static void
 dummy_enc_add(mmap_enc *const dest, const mmap_pp *const pp,
               const mmap_enc *const a, const mmap_enc *const b)
 {
+    assert(my(dest)->nslots == my(a)->nslots);
+    assert(my(dest)->nslots == my(b)->nslots);
+
+    my(dest)->degree = max(my(a)->degree, my(b)->degree);
     for (size_t i = 0; i < my(pp)->nslots; ++i) {
         mpz_add(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
         mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
@@ -228,6 +246,10 @@ static void
 dummy_enc_sub(mmap_enc *const dest, const mmap_pp *const pp,
               const mmap_enc *const a, const mmap_enc *const b)
 {
+    assert(my(dest)->nslots == my(a)->nslots);
+    assert(my(dest)->nslots == my(b)->nslots);
+
+    my(dest)->degree = max(my(a)->degree, my(b)->degree);
     for (size_t i = 0; i < my(pp)->nslots; ++i) {
         mpz_sub(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
         mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
@@ -238,6 +260,10 @@ static void
 dummy_enc_mul(mmap_enc *const dest, const mmap_pp *const pp,
               const mmap_enc *const a, const mmap_enc *const b)
 {
+    assert(my(dest)->nslots == my(a)->nslots);
+    assert(my(dest)->nslots == my(b)->nslots);
+
+    my(dest)->degree = my(a)->degree + my(b)->degree;
     for (size_t i = 0; i < my(pp)->nslots; ++i) {
         mpz_mul(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
         mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
@@ -248,6 +274,7 @@ static bool
 dummy_enc_is_zero(const mmap_enc *const enc, const mmap_pp *const pp)
 {
     bool ret = true;
+    assert(my(enc)->degree == my(pp)->kappa);
     for (size_t i = 0; i < my(pp)->nslots; ++i) {
         ret &= (mpz_cmp_ui(my(enc)->elems[i], 0) == 0);
     }
@@ -260,9 +287,19 @@ dummy_encode(mmap_enc *const enc, const mmap_sk *const sk,
 {
     (void) sk, (void) group;
     assert(n <= my(sk)->nslots);
+    my(enc)->degree = 1;
     for (size_t i = 0; i < n; ++i) {
         fmpz_get_mpz(my(enc)->elems[i], plaintext[i]);
     }
+}
+
+static void
+dummy_print(mmap_enc *const enc)
+{
+    for (size_t i = 0; i < my(enc)->nslots; ++i) {
+        gmp_printf("%Zd ", my(enc)->elems[i]);
+    }
+    printf("\n");
 }
 
 static const mmap_enc_vtable dummy_enc_vtable =
@@ -276,6 +313,7 @@ static const mmap_enc_vtable dummy_enc_vtable =
   .mul = dummy_enc_mul,
   .is_zero = dummy_enc_is_zero,
   .encode = dummy_encode,
+  /* .print = dummy_print, */
   .size = sizeof(dummy_enc_t),
 };
 

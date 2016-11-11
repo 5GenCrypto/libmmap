@@ -87,6 +87,7 @@ typedef struct {
     bool (*const is_zero)(const mmap_enc *const enc, const mmap_pp *const pp);
     void (*const encode)(mmap_enc *const enc, const mmap_sk *const sk, size_t n,
                          const fmpz_t *plaintext, int *group);
+    /* void (*const print)(mmap_enc *const enc); */
     const size_t size;
 } mmap_enc_vtable;
 
