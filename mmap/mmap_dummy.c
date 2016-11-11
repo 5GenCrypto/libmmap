@@ -249,7 +249,7 @@ dummy_enc_is_zero(const mmap_enc *const enc, const mmap_pp *const pp)
 {
     bool ret = true;
     for (size_t i = 0; i < my(pp)->nslots; ++i) {
-        ret &= mpz_cmp_ui(my(enc)->elems[i], 0) == 0;
+        ret &= (mpz_cmp_ui(my(enc)->elems[i], 0) == 0);
     }
     return ret;
 }
