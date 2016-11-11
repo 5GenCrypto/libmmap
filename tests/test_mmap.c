@@ -87,6 +87,15 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     mmap->enc->init(&x0, pp);
     mmap->enc->init(&x1, pp);
     mmap->enc->init(&xp, pp);
+    {
+        /* Test encoding serialization */
+        FILE *f = tmpfile();
+        mmap->enc->fwrite(&x0, f);
+        mmap->enc->clear(&x0);
+        rewind(f);
+        mmap->enc->fread(&x0, f);
+        fclose(f);
+    }
     for (ulong i = 0; i < nzs; i++) {
         if (i < nzs / 2) {
             ix0[i] = 1;
