@@ -14,18 +14,11 @@
 extern "C" {
 #endif
 
-typedef struct dummy_pp_t dummy_pp_t;
 typedef struct dummy_sk_t dummy_sk_t;
 typedef struct dummy_enc_t dummy_enc_t;
 
-struct mmap_pp {
-    union {
-        gghlite_params_t gghlite_self;
-        clt_pp *clt_self;
-        dummy_pp_t *dummy_self;
-    };
-};
-typedef struct mmap_pp mmap_pp;
+typedef void *mmap_pp;
+typedef const void *mmap_ro_pp; /* read-only */
 
 struct mmap_sk {
     union {
@@ -48,9 +41,9 @@ typedef struct mmap_enc mmap_enc;
 /* If we call init or fread, we will call clear. In particular, we will not
  * call clear on the mmap_pp we retrieve from an mmap_sk. */
 typedef struct {
-    void (*const clear)(mmap_pp *const pp);
-    void (*const fread)(mmap_pp *const pp, FILE *const fp);
-    void (*const fwrite)(const mmap_pp *const pp, FILE *const fp);
+    void (*const clear)(const mmap_pp pp);
+    void (*const fread)(const mmap_pp pp, FILE *const fp);
+    void (*const fwrite)(const mmap_ro_pp pp, FILE *const fp);
     const size_t size;
 } mmap_pp_vtable;
 
@@ -65,7 +58,7 @@ typedef struct {
     void (*const clear)(mmap_sk *const sk);
     void (*const fread)(mmap_sk *const sk, FILE *const fp);
     void (*const fwrite)(const mmap_sk *const sk, FILE *const fp);
-    const mmap_pp * (*const pp)(const mmap_sk *const sk);
+    mmap_ro_pp (*const pp)(const mmap_sk *const sk);
     fmpz_t * (*const plaintext_fields)(const mmap_sk *const sk);
     size_t (*const nslots)(const mmap_sk *const sk);
     size_t (*const nzs)(const mmap_sk *const sk);
@@ -73,18 +66,18 @@ typedef struct {
 } mmap_sk_vtable;
 
 typedef struct {
-    void (*const init)(mmap_enc *const enc, const mmap_pp *const pp);
+    void (*const init)(mmap_enc *const enc, const mmap_ro_pp pp);
     void (*const clear)(mmap_enc *const enc);
     void (*const fread)(mmap_enc *const enc, FILE *const fp);
     void (*const fwrite)(const mmap_enc *const enc, FILE *const fp);
     void (*const set)(mmap_enc *const dest, const mmap_enc *const src);
-    void (*const add)(mmap_enc *const dest, const mmap_pp *const pp,
+    void (*const add)(mmap_enc *const dest, const mmap_ro_pp pp,
                       const mmap_enc *const a, const mmap_enc *const b);
-    void (*const sub)(mmap_enc *const dest, const mmap_pp *const pp,
+    void (*const sub)(mmap_enc *const dest, const mmap_ro_pp pp,
                       const mmap_enc *const a, const mmap_enc *const b);
-    void (*const mul)(mmap_enc *const dest, const mmap_pp *const pp,
+    void (*const mul)(mmap_enc *const dest, const mmap_ro_pp pp,
                       const mmap_enc *const a, const mmap_enc *const b);
-    bool (*const is_zero)(const mmap_enc *const enc, const mmap_pp *const pp);
+    bool (*const is_zero)(const mmap_enc *const enc, const mmap_ro_pp pp);
     void (*const encode)(mmap_enc *const enc, const mmap_sk *const sk, size_t n,
                          const fmpz_t *plaintext, int *group);
     /* void (*const print)(mmap_enc *const enc); */
@@ -107,15 +100,15 @@ struct _mmap_enc_mat_struct {
 typedef struct _mmap_enc_mat_struct mmap_enc_mat_t[1];
 
 void
-mmap_enc_mat_init(const_mmap_vtable mmap, const mmap_pp *const params,
+mmap_enc_mat_init(const_mmap_vtable mmap, const mmap_ro_pp params,
                   mmap_enc_mat_t m, int nrows, int ncols);
 void
 mmap_enc_mat_clear(const_mmap_vtable mmap, mmap_enc_mat_t m);
 void
-mmap_enc_mat_mul(const_mmap_vtable mmap, const mmap_pp *const params,
+mmap_enc_mat_mul(const_mmap_vtable mmap, const mmap_ro_pp params,
                  mmap_enc_mat_t r, mmap_enc_mat_t m1, mmap_enc_mat_t m2);
 void
-mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_pp *const params,
+mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_ro_pp params,
                      mmap_enc_mat_t r, mmap_enc_mat_t m1, mmap_enc_mat_t m2);
 
 #ifdef __cplusplus

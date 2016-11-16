@@ -23,24 +23,24 @@ static int gghlite_enc_fread_raw(FILE * f, gghlite_enc_t poly);
 static int fmpz_poly_fprint_raw(FILE * file, const fmpz_poly_t poly);
 static int fmpz_poly_fread_raw(FILE * file, fmpz_poly_t poly);
 
-static void gghlite_params_clear_read_wrapper(mmap_pp *const pp)
+static void gghlite_params_clear_read_wrapper(const mmap_pp pp)
 {
-    gghlite_params_clear(pp->gghlite_self);
+    gghlite_params_clear(pp);
 }
-static void fread_gghlite_params_wrapper(mmap_pp *const pp, FILE *const fp)
+static void fread_gghlite_params_wrapper(const mmap_pp pp, FILE *const fp)
 {
-    fread_gghlite_params(fp, pp->gghlite_self);
+    fread_gghlite_params(fp, pp);
 }
-static void fwrite_gghlite_params_wrapper(const mmap_pp *const pp, FILE *const fp)
+static void fwrite_gghlite_params_wrapper(const mmap_ro_pp pp, FILE *const fp)
 {
-    fwrite_gghlite_params(fp, pp->gghlite_self);
+    fwrite_gghlite_params(fp, pp);
 }
 
 static const mmap_pp_vtable gghlite_pp_vtable =
 { .clear = gghlite_params_clear_read_wrapper
   , .fread = fread_gghlite_params_wrapper
   , .fwrite = fwrite_gghlite_params_wrapper
-  , .size = sizeof(mmap_pp)
+  , .size = sizeof(gghlite_params_t)
 };
 
 static int
@@ -72,11 +72,8 @@ static void fread_gghlite_sk_wrapper(mmap_sk *const sk, FILE *const fp)
 { fread_gghlite_sk(fp, sk->gghlite_self); }
 static void fwrite_gghlite_sk_wrapper(const mmap_sk *const sk, FILE *const fp)
 { fwrite_gghlite_sk(fp, sk->gghlite_self); }
-static const mmap_pp * gghlite_sk_to_pp(const mmap_sk *const sk)
-/* N.B. This cast is strictly speaking probably not okay from a "portable C"
- * standpoint. However it's almost certainly going to be fine with all the
- * compilers we care about... */
-{ return (const mmap_pp *)sk->gghlite_self->params; }
+static mmap_ro_pp gghlite_sk_to_pp(const mmap_sk *const sk)
+{ return sk->gghlite_self->params; }
 
 static fmpz_t * fmpz_poly_oz_ideal_norm_wrapper(const mmap_sk *const sk)
 {
@@ -104,9 +101,9 @@ static const mmap_sk_vtable gghlite_sk_vtable =
   , .size = sizeof(mmap_sk)
 };
 
-static void gghlite_enc_init_wrapper(mmap_enc *const enc, const mmap_pp *const pp)
+static void gghlite_enc_init_wrapper(mmap_enc *const enc, const mmap_ro_pp pp)
 {
-    gghlite_enc_init(enc->gghlite_self, pp->gghlite_self);
+    gghlite_enc_init(enc->gghlite_self, pp);
 }
 static void gghlite_enc_clear_wrapper(mmap_enc *const enc)
 {
@@ -124,24 +121,24 @@ static void gghlite_enc_set_wrapper(mmap_enc *const dest, const mmap_enc *const 
 {
     gghlite_enc_set(dest->gghlite_self, src->gghlite_self);
 }
-static void gghlite_enc_add_wrapper(mmap_enc *const dest, const mmap_pp *const pp,
+static void gghlite_enc_add_wrapper(mmap_enc *const dest, const mmap_ro_pp pp,
                                     const mmap_enc *const a, const mmap_enc *const b)
 {
-    gghlite_enc_add(dest->gghlite_self, pp->gghlite_self, a->gghlite_self, b->gghlite_self);
+    gghlite_enc_add(dest->gghlite_self, pp, a->gghlite_self, b->gghlite_self);
 }
-static void gghlite_enc_sub_wrapper(mmap_enc *const dest, const mmap_pp *const pp,
+static void gghlite_enc_sub_wrapper(mmap_enc *const dest, const mmap_ro_pp pp,
                                     const mmap_enc *const a, const mmap_enc *const b)
 {
-    gghlite_enc_sub(dest->gghlite_self, pp->gghlite_self, a->gghlite_self, b->gghlite_self);
+    gghlite_enc_sub(dest->gghlite_self, pp, a->gghlite_self, b->gghlite_self);
 }
-static void gghlite_enc_mul_wrapper(mmap_enc *const dest, const mmap_pp *const pp,
+static void gghlite_enc_mul_wrapper(mmap_enc *const dest, const mmap_ro_pp pp,
                                     const mmap_enc *const a, const mmap_enc *const b)
 {
-    gghlite_enc_mul(dest->gghlite_self, pp->gghlite_self, a->gghlite_self, b->gghlite_self);
+    gghlite_enc_mul(dest->gghlite_self, pp, a->gghlite_self, b->gghlite_self);
 }
-static bool gghlite_enc_is_zero_wrapper(const mmap_enc *const enc, const mmap_pp *const pp)
+static bool gghlite_enc_is_zero_wrapper(const mmap_enc *const enc, const mmap_ro_pp pp)
 {
-    return gghlite_enc_is_zero(pp->gghlite_self, enc->gghlite_self);
+    return gghlite_enc_is_zero(pp, enc->gghlite_self);
 }
 
 static void

@@ -1,10 +1,10 @@
 #include "mmap.h"
 
-struct dummy_pp_t {
+typedef struct dummy_pp_t {
     mpz_t *moduli;
     size_t nslots;
     size_t kappa;
-};
+} dummy_pp_t;
 struct dummy_sk_t {
     mpz_t *moduli;
     size_t nslots;
@@ -20,53 +20,53 @@ struct dummy_enc_t {
 #define my(sk) (sk)->dummy_self
 #define max(a, b) (a) > (b) ? (a) : (b)
 
-static const mmap_pp *
+static mmap_ro_pp
 dummy_pp_init(const mmap_sk *const sk)
 {
-    mmap_pp *pp = calloc(1, sizeof(mmap_pp));
-    my(pp) = calloc(1, sizeof(dummy_pp_t));
-    my(pp)->moduli = calloc(my(sk)->nslots, sizeof(mpz_t));
+    dummy_pp_t *pp = calloc(1, sizeof(dummy_pp_t));
+    pp->moduli = calloc(my(sk)->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < my(sk)->nslots; ++i) {
-        mpz_init(my(pp)->moduli[i]);
-        mpz_set(my(pp)->moduli[i], my(sk)->moduli[i]);
+        mpz_init(pp->moduli[i]);
+        mpz_set(pp->moduli[i], my(sk)->moduli[i]);
     }
-    my(pp)->nslots = my(sk)->nslots;
-    my(pp)->kappa = my(sk)->kappa;
+    pp->nslots = my(sk)->nslots;
+    pp->kappa = my(sk)->kappa;
     return pp;
 }
 
 static void
-dummy_pp_clear(mmap_pp *pp)
+dummy_pp_clear(mmap_pp pp_)
 {
-    for (size_t i = 0; i < my(pp)->nslots; ++i) {
-        mpz_clear(my(pp)->moduli[i]);
+    dummy_pp_t *pp = pp_;
+    for (size_t i = 0; i < pp->nslots; ++i) {
+        mpz_clear(pp->moduli[i]);
     }
-    free(my(pp)->moduli);
-    free(my(pp));
+    free(pp->moduli);
     free(pp);
 }
 
 static void
-dummy_pp_read(mmap_pp *const pp, FILE *const fp)
+dummy_pp_read(const mmap_pp pp_, FILE *const fp)
 {
-    my(pp) = calloc(1, sizeof(dummy_pp_t));
-    fscanf(fp, "%lu\n", &my(pp)->kappa);
-    fscanf(fp, "%lu\n", &my(pp)->nslots);
-    my(pp)->moduli = calloc(my(pp)->nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < my(pp)->nslots; ++i) {
-        mpz_init(my(pp)->moduli[i]);
-        mpz_inp_raw(my(pp)->moduli[i], fp);
+    dummy_pp_t *const pp = pp_;
+    fscanf(fp, "%lu\n", &pp->kappa);
+    fscanf(fp, "%lu\n", &pp->nslots);
+    pp->moduli = calloc(pp->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < pp->nslots; ++i) {
+        mpz_init(pp->moduli[i]);
+        mpz_inp_raw(pp->moduli[i], fp);
         (void) fscanf(fp, "\n");
     }
 }
 
 static void
-dummy_pp_write(const mmap_pp *const pp, FILE *const fp)
+dummy_pp_write(const mmap_ro_pp pp_, FILE *const fp)
 {
-    fprintf(fp, "%lu\n", my(pp)->kappa);
-    fprintf(fp, "%lu\n", my(pp)->nslots);
-    for (size_t i = 0; i < my(pp)->nslots; ++i) {
-        mpz_out_raw(fp, my(pp)->moduli[i]);
+    const dummy_pp_t *const pp = pp_;
+    fprintf(fp, "%lu\n", pp->kappa);
+    fprintf(fp, "%lu\n", pp->nslots);
+    for (size_t i = 0; i < pp->nslots; ++i) {
+        mpz_out_raw(fp, pp->moduli[i]);
         (void) fprintf(fp, "\n");
     }
 }
@@ -75,7 +75,7 @@ static const mmap_pp_vtable dummy_pp_vtable =
 { .clear = dummy_pp_clear,
   .fread = dummy_pp_read,
   .fwrite = dummy_pp_write,
-  .size = sizeof(mmap_pp)
+  .size = sizeof(dummy_pp_t)
 };
 
 static int
@@ -172,14 +172,15 @@ static const mmap_sk_vtable dummy_sk_vtable =
 };
 
 static void
-dummy_enc_init(mmap_enc *const enc, const mmap_pp *const pp)
+dummy_enc_init(mmap_enc *const enc, const mmap_ro_pp pp_)
 {
+    const dummy_pp_t *const pp = pp_;
     my(enc) = calloc(1, sizeof(dummy_enc_t));
-    my(enc)->elems = calloc(my(pp)->nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+    my(enc)->elems = calloc(pp->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < pp->nslots; ++i) {
         mpz_init(my(enc)->elems[i]);
     }
-    my(enc)->nslots = my(pp)->nslots;
+    my(enc)->nslots = pp->nslots;
     my(enc)->degree = 0;        /* Set when encoding */
 }
 
@@ -229,53 +230,57 @@ dummy_enc_set(mmap_enc *const dest, const mmap_enc *const src)
 }
 
 static void
-dummy_enc_add(mmap_enc *const dest, const mmap_pp *const pp,
+dummy_enc_add(mmap_enc *const dest, const mmap_ro_pp pp_,
               const mmap_enc *const a, const mmap_enc *const b)
 {
     assert(my(dest)->nslots == my(a)->nslots);
     assert(my(dest)->nslots == my(b)->nslots);
 
+    const dummy_pp_t *const pp = pp_;
     my(dest)->degree = max(my(a)->degree, my(b)->degree);
-    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+    for (size_t i = 0; i < pp->nslots; ++i) {
         mpz_add(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
-        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
+        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], pp->moduli[i]);
     }
 }
 
 static void
-dummy_enc_sub(mmap_enc *const dest, const mmap_pp *const pp,
+dummy_enc_sub(mmap_enc *const dest, const mmap_ro_pp pp_,
               const mmap_enc *const a, const mmap_enc *const b)
 {
     assert(my(dest)->nslots == my(a)->nslots);
     assert(my(dest)->nslots == my(b)->nslots);
 
+    const dummy_pp_t *const pp = pp_;
     my(dest)->degree = max(my(a)->degree, my(b)->degree);
-    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+    for (size_t i = 0; i < pp->nslots; ++i) {
         mpz_sub(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
-        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
+        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], pp->moduli[i]);
     }
 }
 
 static void
-dummy_enc_mul(mmap_enc *const dest, const mmap_pp *const pp,
+dummy_enc_mul(mmap_enc *const dest, const mmap_ro_pp pp_,
               const mmap_enc *const a, const mmap_enc *const b)
 {
     assert(my(dest)->nslots == my(a)->nslots);
     assert(my(dest)->nslots == my(b)->nslots);
 
+    const dummy_pp_t *const pp = pp_;
     my(dest)->degree = my(a)->degree + my(b)->degree;
-    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+    for (size_t i = 0; i < pp->nslots; ++i) {
         mpz_mul(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
-        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], my(pp)->moduli[i]);
+        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], pp->moduli[i]);
     }
 }
 
 static bool
-dummy_enc_is_zero(const mmap_enc *const enc, const mmap_pp *const pp)
+dummy_enc_is_zero(const mmap_enc *const enc, const mmap_ro_pp pp_)
 {
+    const dummy_pp_t *const pp = pp_;
     bool ret = true;
-    assert(my(enc)->degree == my(pp)->kappa);
-    for (size_t i = 0; i < my(pp)->nslots; ++i) {
+    assert(my(enc)->degree == pp->kappa);
+    for (size_t i = 0; i < pp->nslots; ++i) {
         ret &= (mpz_cmp_ui(my(enc)->elems[i], 0) == 0);
     }
     return ret;
