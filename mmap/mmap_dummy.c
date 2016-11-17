@@ -23,6 +23,10 @@ struct dummy_enc_t {
 static mmap_ro_pp
 dummy_pp_init(const mmap_sk *const sk)
 {
+    /* TODO: this is a leak: applications are not supposed to call clear/free
+     * on pp's they get from this function; it is sk->clear()'s job to do so,
+     * and it can't, because the sk isn't keeping a reference to the pp created
+     * here */
     dummy_pp_t *pp = calloc(1, sizeof(dummy_pp_t));
     pp->moduli = calloc(my(sk)->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < my(sk)->nslots; ++i) {
@@ -42,7 +46,6 @@ dummy_pp_clear(mmap_pp pp_)
         mpz_clear(pp->moduli[i]);
     }
     free(pp->moduli);
-    free(pp);
 }
 
 static void
