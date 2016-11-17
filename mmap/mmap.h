@@ -1,10 +1,9 @@
 #ifndef _LIBMMAP_MMAP_H_
 #define _LIBMMAP_MMAP_H_
 
-#include <gghlite/gghlite-defs.h>
-#include <clt13.h>
+#include <aesrand.h>
 #include <stdbool.h>
-
+#include <stdio.h> /* for FILE */
 #include <gmp.h>
 
 #define MMAP_OK 0
@@ -14,23 +13,15 @@
 extern "C" {
 #endif
 
-typedef struct dummy_enc_t dummy_enc_t;
 
 typedef void *mmap_pp;
 typedef void *mmap_sk;
+typedef void *mmap_enc;
 
 /* read-only versions */
 typedef const void *mmap_ro_pp;
 typedef const void *mmap_ro_sk;
-
-struct mmap_enc {
-    union {
-        gghlite_enc_t gghlite_self;
-        clt_elem_t clt_self;
-        dummy_enc_t *dummy_self;
-    };
-};
-typedef struct mmap_enc mmap_enc;
+typedef const void *mmap_ro_enc;
 
 /* If we call init or fread, we will call clear. In particular, we will not
  * call clear on the mmap_pp we retrieve from an mmap_sk. */
@@ -60,21 +51,21 @@ typedef struct {
 } mmap_sk_vtable;
 
 typedef struct {
-    void (*const init)(mmap_enc *const enc, const mmap_ro_pp pp);
-    void (*const clear)(mmap_enc *const enc);
-    void (*const fread)(mmap_enc *const enc, FILE *const fp);
-    void (*const fwrite)(const mmap_enc *const enc, FILE *const fp);
-    void (*const set)(mmap_enc *const dest, const mmap_enc *const src);
-    void (*const add)(mmap_enc *const dest, const mmap_ro_pp pp,
-                      const mmap_enc *const a, const mmap_enc *const b);
-    void (*const sub)(mmap_enc *const dest, const mmap_ro_pp pp,
-                      const mmap_enc *const a, const mmap_enc *const b);
-    void (*const mul)(mmap_enc *const dest, const mmap_ro_pp pp,
-                      const mmap_enc *const a, const mmap_enc *const b);
-    bool (*const is_zero)(const mmap_enc *const enc, const mmap_ro_pp pp);
-    void (*const encode)(mmap_enc *const enc, const mmap_ro_sk sk, size_t n,
+    void (*const init)(const mmap_enc enc, const mmap_ro_pp pp);
+    void (*const clear)(const mmap_enc enc);
+    void (*const fread)(const mmap_enc enc, FILE *const fp);
+    void (*const fwrite)(const mmap_ro_enc enc, FILE *const fp);
+    void (*const set)(const mmap_enc dest, const mmap_ro_enc src);
+    void (*const add)(const mmap_enc dest, const mmap_ro_pp pp,
+                      const mmap_ro_enc a, const mmap_ro_enc b);
+    void (*const sub)(const mmap_enc dest, const mmap_ro_pp pp,
+                      const mmap_ro_enc a, const mmap_ro_enc b);
+    void (*const mul)(const mmap_enc dest, const mmap_ro_pp pp,
+                      const mmap_ro_enc a, const mmap_ro_enc b);
+    bool (*const is_zero)(const mmap_ro_enc enc, const mmap_ro_pp pp);
+    void (*const encode)(const mmap_enc enc, const mmap_ro_sk sk, size_t n,
                          const fmpz_t *plaintext, int *group);
-    /* void (*const print)(mmap_enc *const enc); */
+    /* void (*const print)(const mmap_ro_enc enc); */
     const size_t size;
 } mmap_enc_vtable;
 
@@ -88,7 +79,7 @@ typedef const mmap_vtable *const const_mmap_vtable;
 struct _mmap_enc_mat_struct {
     int nrows; // number of rows in the matrix
     int ncols; // number of columns in the matrix
-    mmap_enc ***m;
+    mmap_enc **m;
 };
 
 typedef struct _mmap_enc_mat_struct mmap_enc_mat_t[1];

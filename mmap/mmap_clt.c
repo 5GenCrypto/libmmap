@@ -1,6 +1,7 @@
 #include "mmap.h"
 #include "mmap_clt.h"
 
+#include <clt13.h>
 #include <gmp.h>
 
 static void clt_pp_clear_wrapper(mmap_pp pp)
@@ -111,55 +112,55 @@ static const mmap_sk_vtable clt_sk_vtable =
   , .size   = sizeof(clt_state *)
   };
 
-static void clt_enc_init_wrapper (mmap_enc *const enc, const mmap_ro_pp pp)
+static void clt_enc_init_wrapper (const mmap_enc enc, const mmap_ro_pp pp)
 {
     (void) pp;
-    clt_elem_init(enc->clt_self);
+    clt_elem_init(enc);
 }
 
-static void clt_enc_clear_wrapper (mmap_enc *const enc)
+static void clt_enc_clear_wrapper (const mmap_enc enc)
 {
-    clt_elem_clear(enc->clt_self);
+    clt_elem_clear(enc);
 }
 
-static void clt_enc_fread_wrapper (mmap_enc *const enc, FILE *const fp)
+static void clt_enc_fread_wrapper (const mmap_enc enc, FILE *const fp)
 {
-    clt_elem_init(enc->clt_self);
-    mpz_inp_raw(enc->clt_self, fp);
+    clt_elem_init(enc);
+    mpz_inp_raw(enc, fp);
 }
 
-static void clt_enc_fwrite_wrapper (const mmap_enc *const enc, FILE *const fp)
+static void clt_enc_fwrite_wrapper (const mmap_ro_enc enc, FILE *const fp)
 {
-    mpz_out_raw(fp, enc->clt_self);
+    mpz_out_raw(fp, enc);
 }
 
-static void clt_enc_set_wrapper (mmap_enc *const dest, const mmap_enc *const src)
+static void clt_enc_set_wrapper (const mmap_enc dest, const mmap_ro_enc src)
 {
-    clt_elem_set(dest->clt_self, src->clt_self);
+    clt_elem_set(dest, src);
 }
 
-static void clt_enc_add_wrapper (mmap_enc *const dest, const mmap_ro_pp pp, const mmap_enc *const a, const mmap_enc *const b)
+static void clt_enc_add_wrapper (const mmap_enc dest, const mmap_ro_pp pp, const mmap_ro_enc a, const mmap_ro_enc b)
 {
-    clt_elem_add(dest->clt_self, *(clt_pp *const *const)pp, a->clt_self, b->clt_self);
+    clt_elem_add(dest, *(clt_pp *const *const)pp, a, b);
 }
 
-static void clt_enc_sub_wrapper (mmap_enc *const dest, const mmap_ro_pp pp, const mmap_enc *const a, const mmap_enc *const b)
+static void clt_enc_sub_wrapper (const mmap_enc dest, const mmap_ro_pp pp, const mmap_ro_enc a, const mmap_ro_enc b)
 {
-    clt_elem_sub(dest->clt_self, *(clt_pp *const *const)pp, a->clt_self, b->clt_self);
+    clt_elem_sub(dest, *(clt_pp *const *const)pp, a, b);
 }
 
-static void clt_enc_mul_wrapper (mmap_enc *const dest, const mmap_ro_pp pp, const mmap_enc *const a, const mmap_enc *const b)
+static void clt_enc_mul_wrapper (const mmap_enc dest, const mmap_ro_pp pp, const mmap_ro_enc a, const mmap_ro_enc b)
 {
-    clt_elem_mul(dest->clt_self, *(clt_pp *const *const)pp, a->clt_self, b->clt_self);
+    clt_elem_mul(dest, *(clt_pp *const *const)pp, a, b);
 }
 
-static bool clt_enc_is_zero_wrapper (const mmap_enc *const enc, const mmap_ro_pp pp)
+static bool clt_enc_is_zero_wrapper (const mmap_ro_enc enc, const mmap_ro_pp pp)
 {
-    return clt_is_zero(enc->clt_self, *(clt_pp *const *const)pp);
+    return clt_is_zero(enc, *(clt_pp *const *const)pp);
 }
 
 static void
-clt_encode_wrapper(mmap_enc *const enc, const mmap_ro_sk sk, size_t n,
+clt_encode_wrapper(const mmap_enc enc, const mmap_ro_sk sk, size_t n,
                    const fmpz_t *plaintext, int *group)
 {
     mpz_t *ins;
@@ -169,7 +170,7 @@ clt_encode_wrapper(mmap_enc *const enc, const mmap_ro_sk sk, size_t n,
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
-    clt_encode(enc->clt_self, *(clt_state *const *const)sk, n, ins, group);
+    clt_encode(enc, *(clt_state *const *const)sk, n, ins, group);
     for (size_t i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }

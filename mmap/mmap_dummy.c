@@ -1,4 +1,5 @@
 #include "mmap.h"
+#include <assert.h>
 
 typedef struct dummy_pp_t {
     mpz_t *moduli;
@@ -11,13 +12,12 @@ typedef struct dummy_sk_t {
     size_t nzs;
     size_t kappa;
 } dummy_sk_t;
-struct dummy_enc_t {
+typedef struct dummy_enc_t {
     mpz_t *elems;
     size_t degree;
     size_t nslots;
-};
+} dummy_enc_t;
 
-#define my(sk) (sk)->dummy_self
 #define max(a, b) (a) > (b) ? (a) : (b)
 
 static mmap_ro_pp
@@ -180,138 +180,156 @@ static const mmap_sk_vtable dummy_sk_vtable =
 };
 
 static void
-dummy_enc_init(mmap_enc *const enc, const mmap_ro_pp pp_)
+dummy_enc_init(const mmap_enc enc_, const mmap_ro_pp pp_)
 {
     const dummy_pp_t *const pp = pp_;
-    my(enc) = calloc(1, sizeof(dummy_enc_t));
-    my(enc)->elems = calloc(pp->nslots, sizeof(mpz_t));
+    dummy_enc_t *const enc = enc_;
+    enc->elems = calloc(pp->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < pp->nslots; ++i) {
-        mpz_init(my(enc)->elems[i]);
+        mpz_init(enc->elems[i]);
     }
-    my(enc)->nslots = pp->nslots;
-    my(enc)->degree = 0;        /* Set when encoding */
+    enc->nslots = pp->nslots;
+    enc->degree = 0;        /* Set when encoding */
 }
 
 static void
-dummy_enc_clear(mmap_enc *const enc)
+dummy_enc_clear(const mmap_enc enc_)
 {
-    for (size_t i = 0; i < my(enc)->nslots; ++i) {
-        mpz_clear(my(enc)->elems[i]);
+    dummy_enc_t *const enc = enc_;
+    for (size_t i = 0; i < enc->nslots; ++i) {
+        mpz_clear(enc->elems[i]);
     }
-    free(my(enc)->elems);
-    free(my(enc));
+    free(enc->elems);
 }
 
 static void
-dummy_enc_fread(mmap_enc *enc, FILE *const fp)
+dummy_enc_fread(const mmap_enc enc_, FILE *const fp)
 {
-    my(enc) = calloc(1, sizeof(dummy_enc_t));
-    (void) fscanf(fp, "%lu\n", &my(enc)->degree);
-    (void) fscanf(fp, "%lu\n", &my(enc)->nslots);
-    my(enc)->elems = calloc(my(enc)->nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < my(enc)->nslots; ++i) {
-        mpz_init(my(enc)->elems[i]);
-        mpz_inp_raw(my(enc)->elems[i], fp);
+    dummy_enc_t *const enc = enc_;
+    (void) fscanf(fp, "%lu\n", &enc->degree);
+    (void) fscanf(fp, "%lu\n", &enc->nslots);
+    enc->elems = calloc(enc->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < enc->nslots; ++i) {
+        mpz_init(enc->elems[i]);
+        mpz_inp_raw(enc->elems[i], fp);
         (void) fscanf(fp, "\n");
     }
 }
 
 static void
-dummy_enc_fwrite(const mmap_enc *const enc, FILE *const fp)
+dummy_enc_fwrite(const mmap_ro_enc enc_, FILE *const fp)
 {
-    (void) fprintf(fp, "%lu\n", my(enc)->degree);
-    (void) fprintf(fp, "%lu\n", my(enc)->nslots);
-    for (size_t i = 0; i < my(enc)->nslots; ++i) {
-        mpz_out_raw(fp, my(enc)->elems[i]);
+    const dummy_enc_t *const enc = enc_;
+    (void) fprintf(fp, "%lu\n", enc->degree);
+    (void) fprintf(fp, "%lu\n", enc->nslots);
+    for (size_t i = 0; i < enc->nslots; ++i) {
+        mpz_out_raw(fp, enc->elems[i]);
         (void) fprintf(fp, "\n");
     }
 }
 
 static void
-dummy_enc_set(mmap_enc *const dest, const mmap_enc *const src)
+dummy_enc_set(const mmap_enc dest_, const mmap_ro_enc src_)
 {
-    assert(my(dest)->nslots == my(src)->nslots);
-    my(dest)->degree = my(src)->degree;
-    for (size_t i = 0; i < my(dest)->nslots; ++i) {
-        mpz_set(my(dest)->elems[i], my(src)->elems[i]);
+    dummy_enc_t *const dest = dest_;
+    const dummy_enc_t *const src = src_;
+    assert(dest->nslots == src->nslots);
+    dest->degree = src->degree;
+    for (size_t i = 0; i < dest->nslots; ++i) {
+        mpz_set(dest->elems[i], src->elems[i]);
     }
 }
 
 static void
-dummy_enc_add(mmap_enc *const dest, const mmap_ro_pp pp_,
-              const mmap_enc *const a, const mmap_enc *const b)
+dummy_enc_add(const mmap_enc dest_, const mmap_ro_pp pp_,
+              const mmap_ro_enc a_, const mmap_ro_enc b_)
 {
-    assert(my(dest)->nslots == my(a)->nslots);
-    assert(my(dest)->nslots == my(b)->nslots);
-
+    dummy_enc_t *const dest = dest_;
     const dummy_pp_t *const pp = pp_;
-    my(dest)->degree = max(my(a)->degree, my(b)->degree);
+    const dummy_enc_t *const a = a_;
+    const dummy_enc_t *const b = b_;
+
+    assert(dest->nslots == a->nslots);
+    assert(dest->nslots == b->nslots);
+
+    dest->degree = max(a->degree, b->degree);
     for (size_t i = 0; i < pp->nslots; ++i) {
-        mpz_add(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
-        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], pp->moduli[i]);
+        mpz_add(dest->elems[i], a->elems[i], b->elems[i]);
+        mpz_mod(dest->elems[i], dest->elems[i], pp->moduli[i]);
     }
 }
 
 static void
-dummy_enc_sub(mmap_enc *const dest, const mmap_ro_pp pp_,
-              const mmap_enc *const a, const mmap_enc *const b)
+dummy_enc_sub(const mmap_enc dest_, const mmap_ro_pp pp_,
+              const mmap_ro_enc a_, const mmap_ro_enc b_)
 {
-    assert(my(dest)->nslots == my(a)->nslots);
-    assert(my(dest)->nslots == my(b)->nslots);
-
+    dummy_enc_t *const dest = dest_;
     const dummy_pp_t *const pp = pp_;
-    my(dest)->degree = max(my(a)->degree, my(b)->degree);
+    const dummy_enc_t *const a = a_;
+    const dummy_enc_t *const b = b_;
+
+    assert(dest->nslots == a->nslots);
+    assert(dest->nslots == b->nslots);
+
+    dest->degree = max(a->degree, b->degree);
     for (size_t i = 0; i < pp->nslots; ++i) {
-        mpz_sub(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
-        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], pp->moduli[i]);
+        mpz_sub(dest->elems[i], a->elems[i], b->elems[i]);
+        mpz_mod(dest->elems[i], dest->elems[i], pp->moduli[i]);
     }
 }
 
 static void
-dummy_enc_mul(mmap_enc *const dest, const mmap_ro_pp pp_,
-              const mmap_enc *const a, const mmap_enc *const b)
+dummy_enc_mul(const mmap_enc dest_, const mmap_ro_pp pp_,
+              const mmap_ro_enc a_, const mmap_ro_enc b_)
 {
-    assert(my(dest)->nslots == my(a)->nslots);
-    assert(my(dest)->nslots == my(b)->nslots);
-
+    dummy_enc_t *const dest = dest_;
     const dummy_pp_t *const pp = pp_;
-    my(dest)->degree = my(a)->degree + my(b)->degree;
+    const dummy_enc_t *const a = a_;
+    const dummy_enc_t *const b = b_;
+
+    assert(dest->nslots == a->nslots);
+    assert(dest->nslots == b->nslots);
+
+    dest->degree = a->degree + b->degree;
     for (size_t i = 0; i < pp->nslots; ++i) {
-        mpz_mul(my(dest)->elems[i], my(a)->elems[i], my(b)->elems[i]);
-        mpz_mod(my(dest)->elems[i], my(dest)->elems[i], pp->moduli[i]);
+        mpz_mul(dest->elems[i], a->elems[i], b->elems[i]);
+        mpz_mod(dest->elems[i], dest->elems[i], pp->moduli[i]);
     }
 }
 
 static bool
-dummy_enc_is_zero(const mmap_enc *const enc, const mmap_ro_pp pp_)
+dummy_enc_is_zero(const mmap_ro_enc enc_, const mmap_ro_pp pp_)
 {
+    const dummy_enc_t *const enc = enc_;
     const dummy_pp_t *const pp = pp_;
     bool ret = true;
-    assert(my(enc)->degree == pp->kappa);
+    assert(enc->degree == pp->kappa);
     for (size_t i = 0; i < pp->nslots; ++i) {
-        ret &= (mpz_cmp_ui(my(enc)->elems[i], 0) == 0);
+        ret &= (mpz_cmp_ui(enc->elems[i], 0) == 0);
     }
     return ret;
 }
 
 static void
-dummy_encode(mmap_enc *const enc, const mmap_ro_sk sk_,
+dummy_encode(const mmap_enc enc_, const mmap_ro_sk sk_,
              size_t n, const fmpz_t *plaintext, int *group)
 {
+    dummy_enc_t *const enc = enc_;
     const dummy_sk_t *const sk = sk_;
     (void) sk, (void) group;
     assert(n <= sk->nslots);
-    my(enc)->degree = 1;
+    enc->degree = 1;
     for (size_t i = 0; i < n; ++i) {
-        fmpz_get_mpz(my(enc)->elems[i], plaintext[i]);
+        fmpz_get_mpz(enc->elems[i], plaintext[i]);
     }
 }
 
 static void
-dummy_print(mmap_enc *const enc)
+dummy_print(const mmap_ro_enc enc_)
 {
-    for (size_t i = 0; i < my(enc)->nslots; ++i) {
-        gmp_printf("%Zd ", my(enc)->elems[i]);
+    const dummy_enc_t *const enc = enc_;
+    for (size_t i = 0; i < enc->nslots; ++i) {
+        gmp_printf("%Zd ", enc->elems[i]);
     }
     printf("\n");
 }

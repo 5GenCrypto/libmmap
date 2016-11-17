@@ -101,48 +101,48 @@ static const mmap_sk_vtable gghlite_sk_vtable =
   , .size = sizeof(gghlite_sk_t)
 };
 
-static void gghlite_enc_init_wrapper(mmap_enc *const enc, const mmap_ro_pp pp)
+static void gghlite_enc_init_wrapper(const mmap_enc enc, const mmap_ro_pp pp)
 {
-    gghlite_enc_init(enc->gghlite_self, pp);
+    gghlite_enc_init(enc, pp);
 }
-static void gghlite_enc_clear_wrapper(mmap_enc *const enc)
+static void gghlite_enc_clear_wrapper(const mmap_enc enc)
 {
-    gghlite_enc_clear(enc->gghlite_self);
+    gghlite_enc_clear(enc);
 }
-static void gghlite_enc_fread_raw_wrapper(mmap_enc *const enc, FILE *const fp)
+static void gghlite_enc_fread_raw_wrapper(const mmap_enc enc, FILE *const fp)
 {
-    gghlite_enc_fread_raw(fp, enc->gghlite_self);
+    gghlite_enc_fread_raw(fp, enc);
 }
-static void gghlite_enc_fprint_raw_wrapper(const mmap_enc *const enc, FILE *const fp)
+static void gghlite_enc_fprint_raw_wrapper(const mmap_ro_enc enc, FILE *const fp)
 {
-    gghlite_enc_fprint_raw(fp, enc->gghlite_self);
+    gghlite_enc_fprint_raw(fp, enc);
 }
-static void gghlite_enc_set_wrapper(mmap_enc *const dest, const mmap_enc *const src)
+static void gghlite_enc_set_wrapper(const mmap_enc dest, const mmap_ro_enc src)
 {
-    gghlite_enc_set(dest->gghlite_self, src->gghlite_self);
+    gghlite_enc_set(dest, src);
 }
-static void gghlite_enc_add_wrapper(mmap_enc *const dest, const mmap_ro_pp pp,
-                                    const mmap_enc *const a, const mmap_enc *const b)
+static void gghlite_enc_add_wrapper(const mmap_enc dest, const mmap_ro_pp pp,
+                                    const mmap_ro_enc a, const mmap_ro_enc b)
 {
-    gghlite_enc_add(dest->gghlite_self, pp, a->gghlite_self, b->gghlite_self);
+    gghlite_enc_add(dest, pp, a, b);
 }
-static void gghlite_enc_sub_wrapper(mmap_enc *const dest, const mmap_ro_pp pp,
-                                    const mmap_enc *const a, const mmap_enc *const b)
+static void gghlite_enc_sub_wrapper(const mmap_enc dest, const mmap_ro_pp pp,
+                                    const mmap_ro_enc a, const mmap_ro_enc b)
 {
-    gghlite_enc_sub(dest->gghlite_self, pp, a->gghlite_self, b->gghlite_self);
+    gghlite_enc_sub(dest, pp, a, b);
 }
-static void gghlite_enc_mul_wrapper(mmap_enc *const dest, const mmap_ro_pp pp,
-                                    const mmap_enc *const a, const mmap_enc *const b)
+static void gghlite_enc_mul_wrapper(const mmap_enc dest, const mmap_ro_pp pp,
+                                    const mmap_ro_enc a, const mmap_ro_enc b)
 {
-    gghlite_enc_mul(dest->gghlite_self, pp, a->gghlite_self, b->gghlite_self);
+    gghlite_enc_mul(dest, pp, a, b);
 }
-static bool gghlite_enc_is_zero_wrapper(const mmap_enc *const enc, const mmap_ro_pp pp)
+static bool gghlite_enc_is_zero_wrapper(const mmap_ro_enc enc, const mmap_ro_pp pp)
 {
-    return gghlite_enc_is_zero(pp, enc->gghlite_self);
+    return gghlite_enc_is_zero(pp, enc);
 }
 
 static void
-gghlite_enc_set_gghlite_clr_wrapper(mmap_enc *const enc,
+gghlite_enc_set_gghlite_clr_wrapper(const mmap_enc enc,
                                     const mmap_ro_sk sk, size_t n,
                                     const fmpz_t *plaintext, int *group)
 {
@@ -150,7 +150,7 @@ gghlite_enc_set_gghlite_clr_wrapper(mmap_enc *const enc,
     gghlite_clr_t e;
     gghlite_clr_init(e);
     fmpz_poly_set_coeff_fmpz(e, 0, plaintext[0]);
-    gghlite_enc_set_gghlite_clr(enc->gghlite_self, sk, e, 1, group, 1);
+    gghlite_enc_set_gghlite_clr(enc, sk, e, 1, group, 1);
     gghlite_clr_clear(e);
 }
 
@@ -480,7 +480,7 @@ static const mmap_enc_vtable gghlite_enc_vtable =
   , .clear = gghlite_enc_clear_wrapper
   , .fread = gghlite_enc_fread_raw_wrapper
   , .fwrite = gghlite_enc_fprint_raw_wrapper
-  , .size = sizeof(mmap_enc)
+  , .size = sizeof(gghlite_enc_t)
   , .set = gghlite_enc_set_wrapper
   , .add = gghlite_enc_add_wrapper
   , .sub = gghlite_enc_sub_wrapper

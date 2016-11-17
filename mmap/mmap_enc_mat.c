@@ -1,4 +1,5 @@
 #include "mmap.h"
+#include <assert.h>
 
 void
 mmap_enc_mat_init(const_mmap_vtable mmap, const mmap_ro_pp params,
@@ -6,10 +7,10 @@ mmap_enc_mat_init(const_mmap_vtable mmap, const mmap_ro_pp params,
 {
     m->nrows = nrows;
     m->ncols = ncols;
-    m->m = malloc(nrows * sizeof(mmap_enc **));
+    m->m = malloc(nrows * sizeof(mmap_enc *));
     assert(m->m);
     for(int i = 0; i < m->nrows; i++) {
-        m->m[i] = malloc(m->ncols * sizeof(mmap_enc *));
+        m->m[i] = malloc(m->ncols * sizeof(mmap_enc));
         assert(m->m[i]);
         for(int j = 0; j < m->ncols; j++) {
             m->m[i][j] = malloc(mmap->enc->size);
@@ -37,7 +38,7 @@ void
 mmap_enc_mat_mul(const_mmap_vtable mmap, const mmap_ro_pp params,
                  mmap_enc_mat_t r, mmap_enc_mat_t m1, mmap_enc_mat_t m2)
 {
-    mmap_enc *tmp;
+    mmap_enc tmp;
     mmap_enc_mat_t tmp_mat;
 
     tmp = malloc(mmap->enc->size);
@@ -84,7 +85,7 @@ mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_ro_pp params,
     for(int i = 0; i < m1->nrows; i++) {
         for(int j = 0; j < m2->ncols; j++) {
             for(int k = 0; k < m1->ncols; k++) {
-                mmap_enc *tmp = malloc(mmap->enc->size);
+                mmap_enc tmp = malloc(mmap->enc->size);
                 mmap->enc->init(tmp, params);
                 mmap->enc->mul(tmp, params, m1->m[i][k], m2->m[k][j]);
                 mmap->enc->add(tmp_mat->m[i][j], params, tmp_mat->m[i][j], tmp);
