@@ -12,6 +12,7 @@
 #include "utils.h"
 
 const ulong lambdas[] = {8, 16, 24, 32};
+bool deterministic;
 
 static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
 {
@@ -25,9 +26,15 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     fmpz_t x1, x2, zero, one;
     int ok = 1;
 
-    srand(time(NULL));
-
-    aes_randinit(rng);
+    if(deterministic) {
+        /* chosen by fair die roll */
+        srand(2649794798);
+        aes_randinit_seedn(rng, (unsigned char []){92,44,135,51,20,243,175,157,99,32,191,224,201,240,59,140,200,118,49,100,80,43,239,243,238,221,92,36,46,133,23,35}, 32
+                              , (unsigned char []){}, 0);
+    } else {
+        srand(time(NULL));
+        aes_randinit(rng);
+    }
 
     for (size_t i = 0; i < nzs; i++)
         pows[i] = 1;
@@ -181,8 +188,9 @@ static int test_lambdas(const mmap_vtable *vtable, bool is_gghlite)
     return 0;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+    deterministic = argc > 1;
     printf("* Dummy\n");
     if (test_lambdas(&dummy_vtable, false))
         return 1;
