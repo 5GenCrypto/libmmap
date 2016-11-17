@@ -44,7 +44,7 @@ static const mmap_pp_vtable gghlite_pp_vtable =
 };
 
 static int
-gghlite_jigsaw_init_gamma_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
+gghlite_jigsaw_init_gamma_wrapper(const mmap_sk sk, size_t lambda, size_t kappa,
                                   size_t gamma, int *pows, size_t nslots,
                                   unsigned long ncores, aes_randstate_t randstate,
                                   bool verbose)
@@ -61,31 +61,31 @@ gghlite_jigsaw_init_gamma_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa
         flags |= GGHLITE_FLAGS_VERBOSE;
     else
         flags |= GGHLITE_FLAGS_QUIET;
-    gghlite_jigsaw_init_gamma(sk->gghlite_self, lambda, kappa, gamma, flags,
+    gghlite_jigsaw_init_gamma(sk, lambda, kappa, gamma, flags,
                               randstate);
     return MMAP_OK;
 }
 
-static void gghlite_sk_clear_wrapper(mmap_sk *const sk)
-{ gghlite_sk_clear(sk->gghlite_self, 1); }
-static void fread_gghlite_sk_wrapper(mmap_sk *const sk, FILE *const fp)
-{ fread_gghlite_sk(fp, sk->gghlite_self); }
-static void fwrite_gghlite_sk_wrapper(const mmap_sk *const sk, FILE *const fp)
-{ fwrite_gghlite_sk(fp, sk->gghlite_self); }
-static mmap_ro_pp gghlite_sk_to_pp(const mmap_sk *const sk)
-{ return sk->gghlite_self->params; }
+static void gghlite_sk_clear_wrapper(const mmap_sk sk)
+{ gghlite_sk_clear(sk, 1); }
+static void fread_gghlite_sk_wrapper(const mmap_sk sk, FILE *const fp)
+{ fread_gghlite_sk(fp, sk); }
+static void fwrite_gghlite_sk_wrapper(const mmap_ro_sk sk, FILE *const fp)
+{ fwrite_gghlite_sk(fp, sk); }
+static mmap_ro_pp gghlite_sk_to_pp(const mmap_ro_sk sk)
+{ return ((const struct _gghlite_sk_struct *const)sk)->params; }
 
-static fmpz_t * fmpz_poly_oz_ideal_norm_wrapper(const mmap_sk *const sk)
+static fmpz_t * fmpz_poly_oz_ideal_norm_wrapper(const mmap_ro_sk sk)
 {
     fmpz_t *moduli;
 
     moduli = calloc(1, sizeof(fmpz_t));
     fmpz_init(moduli[0]);
-    fmpz_poly_oz_ideal_norm(moduli[0], sk->gghlite_self->g, sk->gghlite_self->params->n, 0);
+    fmpz_poly_oz_ideal_norm(moduli[0], ((const struct _gghlite_sk_struct *const)sk)->g, ((const struct _gghlite_sk_struct *const)sk)->params->n, 0);
     return moduli;
 }
 
-static size_t gghlite_nslots(const mmap_sk *const sk __attribute__ ((unused)))
+static size_t gghlite_nslots(const mmap_ro_sk sk __attribute__ ((unused)))
 {
     return 1;
 }
@@ -98,7 +98,7 @@ static const mmap_sk_vtable gghlite_sk_vtable =
   , .pp = gghlite_sk_to_pp
   , .plaintext_fields = fmpz_poly_oz_ideal_norm_wrapper
   , .nslots = gghlite_nslots
-  , .size = sizeof(mmap_sk)
+  , .size = sizeof(gghlite_sk_t)
 };
 
 static void gghlite_enc_init_wrapper(mmap_enc *const enc, const mmap_ro_pp pp)
@@ -143,14 +143,14 @@ static bool gghlite_enc_is_zero_wrapper(const mmap_enc *const enc, const mmap_ro
 
 static void
 gghlite_enc_set_gghlite_clr_wrapper(mmap_enc *const enc,
-                                    const mmap_sk *const sk, size_t n,
+                                    const mmap_ro_sk sk, size_t n,
                                     const fmpz_t *plaintext, int *group)
 {
     (void) n;
     gghlite_clr_t e;
     gghlite_clr_init(e);
     fmpz_poly_set_coeff_fmpz(e, 0, plaintext[0]);
-    gghlite_enc_set_gghlite_clr(enc->gghlite_self, sk->gghlite_self, e, 1, group, 1);
+    gghlite_enc_set_gghlite_clr(enc->gghlite_self, sk, e, 1, group, 1);
     gghlite_clr_clear(e);
 }
 

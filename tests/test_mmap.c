@@ -20,8 +20,8 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     /* const size_t kappa = 2; */
     int pows[nzs], top_level[nzs], ix0[nzs], ix1[nzs];
     aes_randstate_t rng;
-    mmap_sk *sk1, *sk2;
-    mmap_pp *pp1, *pp2;
+    mmap_sk sk1, sk2;
+    mmap_pp pp1, pp2;
     mmap_enc enc0, enc1, enc;
     fmpz_t x1, x2, zero, one;
     int ok = 1;
@@ -58,14 +58,14 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
         fclose(f);
 
         f = tmpfile();
-        pp2 = (mmap_pp *) mmap->sk->pp(sk2);
+        pp2 = mmap->sk->pp(sk2);
         mmap->pp->fwrite(pp2, f);
         rewind(f);
         pp2 = malloc(mmap->pp->size);
         mmap->pp->fread(pp2, f);
         fclose(f);
     }
-    pp1 = (mmap_pp *) mmap->sk->pp(sk1);
+    pp1 = mmap->sk->pp(sk1);
 
     fmpz_init_set_ui(x1, 0);
     fmpz_init_set_ui(x2, 0);
@@ -173,6 +173,8 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     mmap->enc->clear(&enc1);
     mmap->enc->clear(&enc);
 
+    mmap->sk->clear(sk1);
+    mmap->sk->clear(sk2);
     free(sk1);
     free(sk2);
     return !ok;

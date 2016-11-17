@@ -5,12 +5,12 @@ typedef struct dummy_pp_t {
     size_t nslots;
     size_t kappa;
 } dummy_pp_t;
-struct dummy_sk_t {
+typedef struct dummy_sk_t {
     mpz_t *moduli;
     size_t nslots;
     size_t nzs;
     size_t kappa;
-};
+} dummy_sk_t;
 struct dummy_enc_t {
     mpz_t *elems;
     size_t degree;
@@ -21,20 +21,21 @@ struct dummy_enc_t {
 #define max(a, b) (a) > (b) ? (a) : (b)
 
 static mmap_ro_pp
-dummy_pp_init(const mmap_sk *const sk)
+dummy_pp_init(const mmap_ro_sk sk_)
 {
+    const dummy_sk_t *const sk = sk_;
     /* TODO: this is a leak: applications are not supposed to call clear/free
      * on pp's they get from this function; it is sk->clear()'s job to do so,
      * and it can't, because the sk isn't keeping a reference to the pp created
      * here */
     dummy_pp_t *pp = calloc(1, sizeof(dummy_pp_t));
-    pp->moduli = calloc(my(sk)->nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < my(sk)->nslots; ++i) {
+    pp->moduli = calloc(sk->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < sk->nslots; ++i) {
         mpz_init(pp->moduli[i]);
-        mpz_set(pp->moduli[i], my(sk)->moduli[i]);
+        mpz_set(pp->moduli[i], sk->moduli[i]);
     }
-    pp->nslots = my(sk)->nslots;
-    pp->kappa = my(sk)->kappa;
+    pp->nslots = sk->nslots;
+    pp->kappa = sk->kappa;
     return pp;
 }
 
@@ -82,84 +83,88 @@ static const mmap_pp_vtable dummy_pp_vtable =
 };
 
 static int
-dummy_state_init(mmap_sk *const sk, size_t lambda, size_t kappa, 
+dummy_state_init(const mmap_sk sk_, size_t lambda, size_t kappa, 
                  size_t gamma, int *pows, size_t nslots, size_t ncores,
                  aes_randstate_t rng, bool verbose)
 {
+    dummy_sk_t *const sk = sk_;
     (void) pows, (void) ncores, (void) verbose;
     if (nslots == 0)
         nslots = 1;
-    my(sk) = malloc(sizeof(dummy_sk_t));
-    my(sk)->moduli = calloc(nslots, sizeof(mpz_t));
+    sk->moduli = calloc(nslots, sizeof(mpz_t));
     for (size_t i = 0; i < nslots; ++i) {
-        mpz_init(my(sk)->moduli[i]);
-        mpz_urandomb_aes(my(sk)->moduli[i], rng, lambda);
-        mpz_nextprime(my(sk)->moduli[i], my(sk)->moduli[i]);
+        mpz_init(sk->moduli[i]);
+        mpz_urandomb_aes(sk->moduli[i], rng, lambda);
+        mpz_nextprime(sk->moduli[i], sk->moduli[i]);
     }
-    my(sk)->nslots = nslots;
-    my(sk)->nzs = gamma;
-    my(sk)->kappa = kappa;
+    sk->nslots = nslots;
+    sk->nzs = gamma;
+    sk->kappa = kappa;
     return MMAP_OK;
 }
 
 static void
-dummy_state_clear(mmap_sk *const sk)
+dummy_state_clear(const mmap_sk sk_)
 {
-    for (size_t i = 0; i < my(sk)->nslots; ++i) {
-        mpz_clear(my(sk)->moduli[i]);
+    dummy_sk_t *const sk = sk_;
+    for (size_t i = 0; i < sk->nslots; ++i) {
+        mpz_clear(sk->moduli[i]);
     }
-    free(my(sk)->moduli);
-    free(my(sk));
+    free(sk->moduli);
 }
 
 static void
-dummy_state_read(mmap_sk *const sk, FILE *const fp)
+dummy_state_read(const mmap_sk sk_, FILE *const fp)
 {
-    my(sk) = calloc(1, sizeof(dummy_sk_t));
-    (void) fscanf(fp, "%lu\n", &my(sk)->kappa);
-    (void) fscanf(fp, "%lu\n", &my(sk)->nslots);
-    my(sk)->moduli = calloc(my(sk)->nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < my(sk)->nslots; ++i) {
-        mpz_init(my(sk)->moduli[i]);
-        mpz_inp_raw(my(sk)->moduli[i], fp);
+    dummy_sk_t *const sk = sk_;
+    (void) fscanf(fp, "%lu\n", &sk->kappa);
+    (void) fscanf(fp, "%lu\n", &sk->nslots);
+    sk->moduli = calloc(sk->nslots, sizeof(mpz_t));
+    for (size_t i = 0; i < sk->nslots; ++i) {
+        mpz_init(sk->moduli[i]);
+        mpz_inp_raw(sk->moduli[i], fp);
         (void) fscanf(fp, "\n");
     }
 }
 
 static void
-dummy_state_write(const mmap_sk *const sk, FILE *const fp)
+dummy_state_write(const mmap_ro_sk sk_, FILE *const fp)
 {
-    (void) fprintf(fp, "%lu\n", my(sk)->kappa);
-    (void) fprintf(fp, "%lu\n", my(sk)->nslots);
-    for (size_t i = 0; i < my(sk)->nslots; ++i) {
-        mpz_out_raw(fp, my(sk)->moduli[i]);
+    const dummy_sk_t *const sk = sk_;
+    (void) fprintf(fp, "%lu\n", sk->kappa);
+    (void) fprintf(fp, "%lu\n", sk->nslots);
+    for (size_t i = 0; i < sk->nslots; ++i) {
+        mpz_out_raw(fp, sk->moduli[i]);
         (void) fprintf(fp, "\n");
     }
 }
 
 static fmpz_t *
-dummy_state_get_moduli(const mmap_sk *const sk)
+dummy_state_get_moduli(const mmap_ro_sk sk_)
 {
+    const dummy_sk_t *const sk = sk_;
     fmpz_t *moduli;
 
-    moduli = calloc(my(sk)->nslots, sizeof(fmpz_t));
-    for (size_t i = 0; i < my(sk)->nslots; ++i) {
+    moduli = calloc(sk->nslots, sizeof(fmpz_t));
+    for (size_t i = 0; i < sk->nslots; ++i) {
         fmpz_init(moduli[i]);
-        fmpz_set_mpz(moduli[i], my(sk)->moduli[i]);
+        fmpz_set_mpz(moduli[i], sk->moduli[i]);
     }
     return moduli;
 }
 
 static size_t
-dummy_state_nslots(const mmap_sk *const sk)
+dummy_state_nslots(const mmap_ro_sk sk_)
 {
-    return my(sk)->nslots;
+    const dummy_sk_t *const sk = sk_;
+    return sk->nslots;
 }
 
 static size_t
-dummy_state_nzs(const mmap_sk *const sk)
+dummy_state_nzs(const mmap_ro_sk sk_)
 {
-    return my(sk)->nzs;
+    const dummy_sk_t *const sk = sk_;
+    return sk->nzs;
 }
 
 static const mmap_sk_vtable dummy_sk_vtable =
@@ -290,11 +295,12 @@ dummy_enc_is_zero(const mmap_enc *const enc, const mmap_ro_pp pp_)
 }
 
 static void
-dummy_encode(mmap_enc *const enc, const mmap_sk *const sk,
+dummy_encode(mmap_enc *const enc, const mmap_ro_sk sk_,
              size_t n, const fmpz_t *plaintext, int *group)
 {
+    const dummy_sk_t *const sk = sk_;
     (void) sk, (void) group;
-    assert(n <= my(sk)->nslots);
+    assert(n <= sk->nslots);
     my(enc)->degree = 1;
     for (size_t i = 0; i < n; ++i) {
         fmpz_get_mpz(my(enc)->elems[i], plaintext[i]);

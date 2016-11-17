@@ -26,7 +26,7 @@ static const mmap_pp_vtable clt_pp_vtable =
   };
 
 static int
-clt_state_init_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
+clt_state_init_wrapper(const mmap_sk sk, size_t lambda, size_t kappa,
                        size_t gamma, int *pows, size_t nslots, size_t ncores,
                        aes_randstate_t rng, bool verbose)
 {
@@ -43,37 +43,37 @@ clt_state_init_wrapper(mmap_sk *const sk, size_t lambda, size_t kappa,
             pows[i] = 1;
         }
     }
-    sk->clt_self = clt_state_new(kappa, lambda, gamma, pows, nslots, ncores,
+    *(clt_state **)sk = clt_state_new(kappa, lambda, gamma, pows, nslots, ncores,
                                  flags, rng);
-    if (sk->clt_self == NULL)
+    if (*(clt_state **)sk == NULL)
         ret = MMAP_ERR;
     if (new_pows)
         free(pows);
     return ret;
 }
 
-static void clt_state_clear_wrapper(mmap_sk *const sk)
+static void clt_state_clear_wrapper(const mmap_sk sk)
 {
-    clt_state_delete(sk->clt_self);
+    clt_state_delete(*(clt_state **)sk);
 }
 
-static void clt_state_read_wrapper(mmap_sk *const sk, FILE *const fp)
+static void clt_state_read_wrapper(const mmap_sk sk, FILE *const fp)
 {
-    sk->clt_self = clt_state_fread(fp);
+    *(clt_state **)sk = clt_state_fread(fp);
 }
 
-static void clt_state_save_wrapper(const mmap_sk *const sk, FILE *const fp)
+static void clt_state_save_wrapper(const mmap_ro_sk sk, FILE *const fp)
 {
-    clt_state_fwrite(sk->clt_self, fp);
+    clt_state_fwrite(*(clt_state *const *const)sk, fp);
 }
 
-static fmpz_t * clt_state_get_moduli(const mmap_sk *const sk)
+static fmpz_t * clt_state_get_moduli(const mmap_ro_sk sk)
 {
     mpz_t *moduli;
     fmpz_t *fmoduli;
-    size_t nslots = clt_state_nslots(sk->clt_self);
+    size_t nslots = clt_state_nslots(*(clt_state *const *const)sk);
 
-    moduli = clt_state_moduli(sk->clt_self);
+    moduli = clt_state_moduli(*(clt_state *const *const)sk);
     fmoduli = calloc(nslots, sizeof(fmpz_t));
     for (size_t i = 0; i < nslots; ++i) {
         fmpz_init(fmoduli[i]);
@@ -82,21 +82,21 @@ static fmpz_t * clt_state_get_moduli(const mmap_sk *const sk)
     return fmoduli;
 }
 
-static mmap_ro_pp clt_pp_init_wrapper(const mmap_sk *const sk)
+static mmap_ro_pp clt_pp_init_wrapper(const mmap_ro_sk sk)
 {
     clt_pp * *const pp = malloc(sizeof(clt_pp *));
-    *pp = clt_pp_new(sk->clt_self);
+    *pp = clt_pp_new(*(clt_state *const *const)sk);
     return pp;
 }
 
-static size_t clt_state_nslots_wrapper(const mmap_sk *const sk)
+static size_t clt_state_nslots_wrapper(const mmap_ro_sk sk)
 {
-    return clt_state_nslots(sk->clt_self);
+    return clt_state_nslots(*(clt_state *const *const)sk);
 }
 
-static size_t clt_state_nzs_wrapper(const mmap_sk *const sk)
+static size_t clt_state_nzs_wrapper(const mmap_ro_sk sk)
 {
-    return clt_state_nzs(sk->clt_self);
+    return clt_state_nzs(*(clt_state *const *const)sk);
 }
 
 static const mmap_sk_vtable clt_sk_vtable =
@@ -159,7 +159,7 @@ static bool clt_enc_is_zero_wrapper (const mmap_enc *const enc, const mmap_ro_pp
 }
 
 static void
-clt_encode_wrapper(mmap_enc *const enc, const mmap_sk *const sk, size_t n,
+clt_encode_wrapper(mmap_enc *const enc, const mmap_ro_sk sk, size_t n,
                    const fmpz_t *plaintext, int *group)
 {
     mpz_t *ins;
@@ -169,7 +169,7 @@ clt_encode_wrapper(mmap_enc *const enc, const mmap_sk *const sk, size_t n,
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
-    clt_encode(enc->clt_self, sk->clt_self, n, ins, group);
+    clt_encode(enc->clt_self, *(clt_state *const *const)sk, n, ins, group);
     for (size_t i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }

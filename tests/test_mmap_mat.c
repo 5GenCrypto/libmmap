@@ -16,7 +16,7 @@ ulong kappa = 2;
 
 const ulong lambdas[] = {8, 16, 24, 32};
 
-static void encode(const mmap_vtable *vtable, mmap_sk *sk,
+static void encode(const mmap_vtable *vtable, mmap_sk sk,
                    mmap_enc_mat_t out, fmpz_mat_t in, int idx, int nrows,
                    int ncols, aes_randstate_t rand)
 {
@@ -83,7 +83,7 @@ fmpz_layer_mul_right(fmpz_mat_t zero, fmpz_mat_t one, fmpz_mat_t m, fmpz_t p)
 static int test(const mmap_vtable *vtable, ulong lambda, bool is_gghlite)
 {
     int ok = 1;
-    mmap_sk sk;
+    mmap_sk sk = malloc(vtable->sk->size);
     const mmap_pp *pp;
 
     aes_randstate_t rng;
@@ -91,9 +91,9 @@ static int test(const mmap_vtable *vtable, ulong lambda, bool is_gghlite)
 
     fmpz_t *moduli;
 
-    vtable->sk->init(&sk, lambda, kappa, nzs, NULL, 0, 0, rng, false);
-    moduli = vtable->sk->plaintext_fields(&sk);
-    pp = vtable->sk->pp(&sk);
+    vtable->sk->init(sk, lambda, kappa, nzs, NULL, 0, 0, rng, false);
+    moduli = vtable->sk->plaintext_fields(sk);
+    pp = vtable->sk->pp(sk);
 
     if (is_gghlite)
         return 0;               /* TODO: Support gghlite */
@@ -128,10 +128,10 @@ static int test(const mmap_vtable *vtable, ulong lambda, bool is_gghlite)
     mmap_enc_mat_init(vtable, pp, one_enc_2,  2, 2);
     mmap_enc_mat_init(vtable, pp, result,     1, 2);
 
-    encode(vtable, &sk, zero_enc_1, zero_1, 0, 1, 2, rng);
-    encode(vtable, &sk, one_enc_1,  one_1,  0, 1, 2, rng);
-    encode(vtable, &sk, zero_enc_2, zero_2, 1, 2, 2, rng);
-    encode(vtable, &sk, one_enc_2,  one_2,  1, 2, 2, rng);
+    encode(vtable, sk, zero_enc_1, zero_1, 0, 1, 2, rng);
+    encode(vtable, sk, one_enc_1,  one_1,  0, 1, 2, rng);
+    encode(vtable, sk, zero_enc_2, zero_2, 1, 2, 2, rng);
+    encode(vtable, sk, one_enc_2,  one_2,  1, 2, 2, rng);
 
     printf("* Matrix multiplication\n");
     mmap_enc_mat_mul(vtable, pp, result, zero_enc_1, zero_enc_2);
@@ -148,10 +148,10 @@ static int test(const mmap_vtable *vtable, ulong lambda, bool is_gghlite)
     fmpz_modp_matrix_inverse(rand, rand, 2, moduli[0]);
     fmpz_layer_mul_left(zero_2, one_2, rand, moduli[0]);
 
-    encode(vtable, &sk, zero_enc_1, zero_1, 0, 1, 2, rng);
-    encode(vtable, &sk, one_enc_1,  one_1,  0, 1, 2, rng);
-    encode(vtable, &sk, zero_enc_2, zero_2, 1, 2, 2, rng);
-    encode(vtable, &sk, one_enc_2,  one_2,  1, 2, 2, rng);
+    encode(vtable, sk, zero_enc_1, zero_1, 0, 1, 2, rng);
+    encode(vtable, sk, one_enc_1,  one_1,  0, 1, 2, rng);
+    encode(vtable, sk, zero_enc_2, zero_2, 1, 2, 2, rng);
+    encode(vtable, sk, one_enc_2,  one_2,  1, 2, 2, rng);
 
     printf("* Randomized matrix multiplication\n");
     mmap_enc_mat_mul(vtable, pp, result, zero_enc_1, zero_enc_2);
