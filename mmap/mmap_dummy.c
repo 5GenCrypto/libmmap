@@ -1,4 +1,5 @@
 #include "mmap.h"
+#include <aesrand/aesrand_gmp.h>
 #include <assert.h>
 
 typedef struct dummy_pp_t {
