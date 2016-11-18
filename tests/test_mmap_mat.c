@@ -2,7 +2,7 @@
 #include <mmap_clt.h>
 #include <mmap_gghlite.h>
 #include <mmap_dummy.h>
-#include <gghlite.h>
+#include <flint/fmpz.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
