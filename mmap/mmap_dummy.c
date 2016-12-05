@@ -28,11 +28,7 @@ dummy_pp_init(const mmap_ro_sk sk_)
 static void
 dummy_pp_clear(mmap_pp pp_)
 {
-    dummy_pp_t *pp = pp_;
-    for (size_t i = 0; i < pp->nslots; ++i) {
-        mpz_clear(pp->moduli[i]);
-    }
-    free(pp->moduli);
+    (void) pp_;
 }
 
 static void
@@ -69,9 +65,9 @@ static const mmap_pp_vtable dummy_pp_vtable =
 };
 
 static int
-dummy_state_init(const mmap_sk sk_, size_t lambda, size_t kappa, 
-                 size_t gamma, int *pows, size_t nslots, size_t ncores,
-                 aes_randstate_t rng, bool verbose)
+dummy_sk_init(const mmap_sk sk_, size_t lambda, size_t kappa,
+              size_t gamma, int *pows, size_t nslots, size_t ncores,
+              aes_randstate_t rng, bool verbose)
 {
     dummy_sk_t *const sk = sk_;
     (void) pows, (void) ncores, (void) verbose;
@@ -90,7 +86,7 @@ dummy_state_init(const mmap_sk sk_, size_t lambda, size_t kappa,
 }
 
 static void
-dummy_state_clear(const mmap_sk sk_)
+dummy_sk_clear(const mmap_sk sk_)
 {
     dummy_sk_t *const sk = sk_;
     for (size_t i = 0; i < sk->pp.nslots; ++i) {
@@ -100,7 +96,7 @@ dummy_state_clear(const mmap_sk sk_)
 }
 
 static void
-dummy_state_read(const mmap_sk sk_, FILE *const fp)
+dummy_sk_read(const mmap_sk sk_, FILE *const fp)
 {
     dummy_sk_t *const sk = sk_;
     (void) fscanf(fp, "%lu\n", &sk->pp.kappa);
@@ -114,7 +110,7 @@ dummy_state_read(const mmap_sk sk_, FILE *const fp)
 }
 
 static void
-dummy_state_write(const mmap_ro_sk sk_, FILE *const fp)
+dummy_sk_write(const mmap_ro_sk sk_, FILE *const fp)
 {
     const dummy_sk_t *const sk = sk_;
     (void) fprintf(fp, "%lu\n", sk->pp.kappa);
@@ -126,7 +122,7 @@ dummy_state_write(const mmap_ro_sk sk_, FILE *const fp)
 }
 
 static fmpz_t *
-dummy_state_get_moduli(const mmap_ro_sk sk_)
+dummy_sk_get_moduli(const mmap_ro_sk sk_)
 {
     const dummy_sk_t *const sk = sk_;
     fmpz_t *moduli;
@@ -140,28 +136,28 @@ dummy_state_get_moduli(const mmap_ro_sk sk_)
 }
 
 static size_t
-dummy_state_nslots(const mmap_ro_sk sk_)
+dummy_sk_nslots(const mmap_ro_sk sk_)
 {
     const dummy_sk_t *const sk = sk_;
     return sk->pp.nslots;
 }
 
 static size_t
-dummy_state_nzs(const mmap_ro_sk sk_)
+dummy_sk_nzs(const mmap_ro_sk sk_)
 {
     const dummy_sk_t *const sk = sk_;
     return sk->nzs;
 }
 
 static const mmap_sk_vtable dummy_sk_vtable =
-{ .init = dummy_state_init,
-  .clear = dummy_state_clear,
-  .fread = dummy_state_read,
-  .fwrite = dummy_state_write,
+{ .init = dummy_sk_init,
+  .clear = dummy_sk_clear,
+  .fread = dummy_sk_read,
+  .fwrite = dummy_sk_write,
   .pp = dummy_pp_init,
-  .plaintext_fields = dummy_state_get_moduli,
-  .nslots = dummy_state_nslots,
-  .nzs = dummy_state_nzs,
+  .plaintext_fields = dummy_sk_get_moduli,
+  .nslots = dummy_sk_nslots,
+  .nzs = dummy_sk_nzs,
   .size = sizeof(dummy_sk_t),
 };
 
