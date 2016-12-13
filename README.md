@@ -72,7 +72,7 @@ The arguments to this method are:
 * how many multiplications need to be supported (kappa),
 * the number of tags in the universe that the zero-test operates at (gamma),
 * the universe that the zero-test operates at, or pass `NULL` for the bag that contains each tag once,
-* how many plaintexts to store in each encoding,
+* how many plaintexts each encoding must be able to store,
 * how much parallelism to use,
 * a random seed (which will be modified in-place during the method call), and
 * a verbosity level.
@@ -81,9 +81,11 @@ The return value is one of `MMAP_OK` or `MMAP_ERR` indicating whether the reques
 
 The `pp` method returns the associated public key. As noted in the section on public keys, the public keys acquired from this method (rather than via the public key's `fread` method) should not be `clear`ed (and implementors of a secret key object's `clear` method are responsible for making sure any data in the `pp` returned from this method is also `clear`ed).
 
-By assumption, plaintexts to be encoded with this key are drawn from Z/p1 x ... x Z/pk for some primes p1, ..., pk, where k is the value passed into the `init` method as the number of plaintexts to store in each encoding. You can ask what the values of the primes p1, ..., pk are via the `plaintext_fields` method. The caller is responsible for `free`ing the array of numbers returned from this method.
+Although you ask for encodings to be able to store a certain number of plaintexts during initialization, the actual encoding may be able to store more plaintexts than requested. You can ask how many plaintexts you can store with the `nslots` query.
 
-You can ask about the `nslots` and `gamma` parameters sent to the `init` method with the `nslots` and `nzs` methods, respectively.
+By assumption, a single collection of plaintexts to be encoded with this key are drawn from Z/p1 x ... x Z/pk for some primes p1, ..., pk, where k is the number returned by `nslots`. You can ask what the values of the primes p1, ..., pk are via the `plaintext_fields` method. The caller is responsible for `free`ing the array of numbers returned from this method.
+
+You can ask about the `gamma` parameter sent to the `init` method with the `nzs` method.
 
 The full interface is given by `mmap_sk_vtable`:
 
@@ -113,8 +115,8 @@ If you have access to the secret key, you can also produce fresh encodings of pl
 The arguments to this method are:
 
 * the secret key,
-* the number of plaintexts to encode (assuming the backend supports multiple-slot plaintexts), which must match how many plaintexts per encoding were requested during key generation,
-* the plaintexts themselves in an array whose length is given by the previous argument, and
+* the number of plaintext slots to encode (assuming the backend supports multiple-slot plaintexts), which must not exceed the number of slots available in this key (see `nslots` above),
+* the plaintext slots themselves in an array whose length is given by the previous argument, and
 * an array of `0`s and `1`s as long as the universe specified during key generation, telling which tags in the universe should be applied to the encoding.
 
 The full interface is given by `mmap_enc_vtable`:
