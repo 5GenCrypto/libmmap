@@ -132,19 +132,15 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
         ok &= expect("is_zero(0 + x)", 0, mmap->enc->is_zero(enc, pp1));
     }
 
-    /* XXX: this should work for GGH! */
-    if (!is_gghlite) {
-        mmap->enc->encode(enc0, sk1, 1, &x1, ix0);
-        mmap->enc->encode(enc1, sk1, 1, &x1, ix1);
-        mmap->enc->add(enc, pp1, enc, enc);
-        ok &= expect("is_zero(x + x)", 0, mmap->enc->is_zero(enc, pp1));
-    }
+    mmap->enc->encode(enc0, sk1, 1, &x1, top_level);
+    mmap->enc->encode(enc1, sk1, 1, &x1, top_level);
+    mmap->enc->add(enc, pp1, enc, enc);
+    ok &= expect("is_zero(x + x)", 0, mmap->enc->is_zero(enc, pp1));
 
-    /* XXX: subtraction not working for CLT */
-    /* mmap->enc->encode(enc0, sk1, 1, &x1, ix0); */
-    /* mmap->enc->encode(enc1, sk1, 1, &x1, ix1); */
-    /* mmap->enc->sub(enc, pp1, enc0, enc1); */
-    /* ok &= expect("is_zero(x - x)", 1, mmap->enc->is_zero(enc, pp1)); */
+    mmap->enc->encode(enc0, sk1, 1, &x1, top_level);
+    mmap->enc->encode(enc1, sk1, 1, &x1, top_level);
+    mmap->enc->sub(enc, pp1, enc0, enc1);
+    ok &= expect("is_zero(x - x)", 1, mmap->enc->is_zero(enc, pp1));
 
     mmap->enc->clear(enc0);
     mmap->enc->clear(enc1);
