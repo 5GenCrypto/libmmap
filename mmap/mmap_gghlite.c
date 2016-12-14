@@ -493,6 +493,7 @@ static const mmap_enc_vtable gghlite_enc_vtable =
   , .mul = gghlite_enc_mul_wrapper
   , .is_zero = gghlite_enc_is_zero_wrapper
   , .encode = gghlite_enc_set_gghlite_clr_wrapper
+  , .print = NULL
 };
 
 

@@ -177,6 +177,12 @@ clt_encode_wrapper(const mmap_enc enc, const mmap_ro_sk sk, size_t n,
     free(ins);
 }
 
+static void
+clt_print_wrapper(const mmap_ro_enc enc)
+{
+    clt_elem_print(enc);
+}
+
 static const mmap_enc_vtable clt_enc_vtable =
   { .init    = clt_enc_init_wrapper
   , .clear   = clt_enc_clear_wrapper
@@ -188,6 +194,7 @@ static const mmap_enc_vtable clt_enc_vtable =
   , .mul     = clt_enc_mul_wrapper
   , .is_zero = clt_enc_is_zero_wrapper
   , .encode  = clt_encode_wrapper
+  , .print   = clt_print_wrapper
   , .size    = sizeof(clt_elem_t)
   };
 

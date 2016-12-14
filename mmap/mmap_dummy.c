@@ -327,7 +327,7 @@ static const mmap_enc_vtable dummy_enc_vtable =
   .mul = dummy_enc_mul,
   .is_zero = dummy_enc_is_zero,
   .encode = dummy_encode,
-  /* .print = dummy_print, */
+  .print = dummy_print,
   .size = sizeof(dummy_enc_t),
 };
 
