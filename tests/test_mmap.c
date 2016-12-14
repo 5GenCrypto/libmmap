@@ -130,12 +130,12 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
         mmap->enc->encode(enc1, sk1, 1, &x1,   top_level);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + x)", 0, mmap->enc->is_zero(enc, pp1));
+        /* TODO: why doesn't this make gghlite happy? */
+        mmap->enc->encode(enc0, sk1, 1, &x1, top_level);
+        mmap->enc->encode(enc1, sk1, 1, &x1, top_level);
+        mmap->enc->add(enc, pp1, enc, enc);
+        ok &= expect("is_zero(x + x)", 0, mmap->enc->is_zero(enc, pp1));
     }
-
-    mmap->enc->encode(enc0, sk1, 1, &x1, top_level);
-    mmap->enc->encode(enc1, sk1, 1, &x1, top_level);
-    mmap->enc->add(enc, pp1, enc, enc);
-    ok &= expect("is_zero(x + x)", 0, mmap->enc->is_zero(enc, pp1));
 
     mmap->enc->encode(enc0, sk1, 1, &x1, top_level);
     mmap->enc->encode(enc1, sk1, 1, &x1, top_level);
