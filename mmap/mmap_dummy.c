@@ -1,5 +1,7 @@
 #include "mmap.h"
+
 #include <assert.h>
+#include <err.h>
 
 typedef struct dummy_pp_t {
     mpz_t *moduli;
@@ -285,7 +287,9 @@ dummy_enc_is_zero(const mmap_ro_enc enc_, const mmap_ro_pp pp_)
     const dummy_enc_t *const enc = enc_;
     const dummy_pp_t *const pp = pp_;
     bool ret = true;
-    assert(enc->degree == pp->kappa);
+    if (enc->degree != pp->kappa) {
+        warnx("warning: degrees not equal (%lu != %lu)", enc->degree, pp->kappa);
+    }
     for (size_t i = 0; i < pp->nslots; ++i) {
         ret &= (mpz_cmp_ui(enc->elems[i], 0) == 0);
     }
