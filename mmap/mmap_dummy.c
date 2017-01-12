@@ -1,12 +1,12 @@
 #include "mmap.h"
 
 #include <assert.h>
-#include <err.h>
 
 typedef struct dummy_pp_t {
     mpz_t *moduli;
     size_t nslots;
     size_t kappa;
+    bool own;
 } dummy_pp_t;
 typedef struct dummy_sk_t {
     dummy_pp_t pp;
@@ -20,17 +20,15 @@ typedef struct dummy_enc_t {
 
 #define max(a, b) (a) > (b) ? (a) : (b)
 
-static mmap_ro_pp
-dummy_pp_init(const mmap_ro_sk sk_)
-{
-    const dummy_sk_t *const sk = sk_;
-    return &sk->pp;
-}
-
 static void
 dummy_pp_clear(mmap_pp pp_)
 {
-    (void) pp_;
+    dummy_pp_t *const pp = pp_;
+    if (pp->own) {
+        for (size_t i = 0; i < pp->nslots; ++i)
+            mpz_clear(pp->moduli[i]);
+        free(pp->moduli);
+    }
 }
 
 static void
@@ -45,6 +43,7 @@ dummy_pp_read(const mmap_pp pp_, FILE *const fp)
         mpz_inp_raw(pp->moduli[i], fp);
         (void) fscanf(fp, "\n");
     }
+    pp->own = true;
 }
 
 static void
@@ -82,9 +81,17 @@ dummy_sk_init(const mmap_sk sk_, size_t lambda, size_t kappa,
         mpz_nextprime(sk->pp.moduli[i], sk->pp.moduli[i]);
     }
     sk->pp.nslots = nslots;
+    sk->pp.own = false;
     sk->nzs = gamma;
     sk->pp.kappa = kappa;
     return MMAP_OK;
+}
+
+static mmap_ro_pp
+dummy_sk_pp(const mmap_ro_sk sk_)
+{
+    const dummy_sk_t *const sk = sk_;
+    return &sk->pp;
 }
 
 static void
@@ -156,7 +163,7 @@ static const mmap_sk_vtable dummy_sk_vtable =
   .clear = dummy_sk_clear,
   .fread = dummy_sk_read,
   .fwrite = dummy_sk_write,
-  .pp = dummy_pp_init,
+  .pp = dummy_sk_pp,
   .plaintext_fields = dummy_sk_get_moduli,
   .nslots = dummy_sk_nslots,
   .nzs = dummy_sk_nzs,
@@ -288,7 +295,7 @@ dummy_enc_is_zero(const mmap_ro_enc enc_, const mmap_ro_pp pp_)
     const dummy_pp_t *const pp = pp_;
     bool ret = true;
     if (enc->degree != pp->kappa) {
-        warnx("warning: degrees not equal (%lu != %lu)", enc->degree, pp->kappa);
+        fprintf(stderr, "warning: degrees not equal (%lu != %lu)", enc->degree, pp->kappa);
     }
     for (size_t i = 0; i < pp->nslots; ++i) {
         ret &= (mpz_cmp_ui(enc->elems[i], 0) == 0);

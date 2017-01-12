@@ -29,8 +29,10 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     if(deterministic) {
         /* chosen by fair die roll */
         srand(2649794798);
-        aes_randinit_seedn(rng, (unsigned char []){92,44,135,51,20,243,175,157,99,32,191,224,201,240,59,140,200,118,49,100,80,43,239,243,238,221,92,36,46,133,23,35}, 32
-                              , (unsigned char []){}, 0);
+        aes_randinit_seedn(rng, (unsigned char []){
+                92,44,135,51,20,243,175,157,99,32,191,224,201,240,59,140,200,
+                    118,49,100,80,43,239,243,238,221,92,36,46,133,23,35},
+            32, (unsigned char []){}, 0);
     } else {
         srand(time(NULL));
         aes_randinit(rng);
@@ -173,6 +175,9 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     free(enc0);
     free(enc1);
     free(enc);
+
+    mmap->pp->clear(pp2);
+    free(pp2);
 
     mmap->sk->clear(sk1);
     mmap->sk->clear(sk2);
