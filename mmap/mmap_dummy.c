@@ -295,7 +295,7 @@ dummy_enc_is_zero(const mmap_ro_enc enc_, const mmap_ro_pp pp_)
     const dummy_pp_t *const pp = pp_;
     bool ret = true;
     if (enc->degree != pp->kappa) {
-        fprintf(stderr, "warning: degrees not equal (%lu != %lu)", enc->degree, pp->kappa);
+        fprintf(stderr, "warning: degrees not equal (%lu != %lu)\n", enc->degree, pp->kappa);
     }
     for (size_t i = 0; i < pp->nslots; ++i) {
         ret &= (mpz_cmp_ui(enc->elems[i], 0) == 0);
