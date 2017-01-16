@@ -15,7 +15,6 @@ build () {
     url=$2
     branch=$3
 
-    echo
     echo building $path
     echo
 

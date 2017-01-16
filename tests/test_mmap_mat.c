@@ -1,6 +1,10 @@
+#include "config.h"
+
 #include <mmap.h>
 #include <mmap_clt.h>
-#include <mmap_gghlite.h>
+#ifdef HAVE_GGHLITE
+#  include <mmap_gghlite.h>
+#endif
 #include <mmap_dummy.h>
 #include <flint/fmpz.h>
 #include <errno.h>
@@ -10,6 +14,10 @@
 #include <time.h>
 
 #include "utils.h"
+
+/* XXX: Currently, fmpz_modp_matrix_inverse is part of gghlite, whereas it
+   should really be within libmmap or something.  This should be fixed! */
+#ifdef HAVE_GGHLITE
 
 ulong nzs = 2;
 ulong kappa = 2;
@@ -185,7 +193,19 @@ int main(void)
     err |= test_lambdas(&dummy_vtable, false);
     printf("* CLT13\n");
     err |= test_lambdas(&clt_vtable, false);
+#ifdef HAVE_GGHLITE
     printf("* GGHLite\n");
     err |= test_lambdas(&gghlite_vtable, true);
+#endif
     return err;
 }
+
+#else
+
+int main(void)
+{
+    return 0;
+}
+
+#endif
+

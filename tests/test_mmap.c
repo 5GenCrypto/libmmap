@@ -1,6 +1,10 @@
+#include "config.h"
+
 #include <mmap.h>
 #include <mmap_clt.h>
-#include <mmap_gghlite.h>
+#ifdef HAVE_GGHLITE
+#  include <mmap_gghlite.h>
+#endif
 #include <mmap_dummy.h>
 #include <flint/fmpz.h>
 #include <errno.h>
@@ -205,9 +209,11 @@ int main(int argc, char **argv)
     printf("* CLT13\n");
     if (test_lambdas(&clt_vtable, false))
         return 1;
+#ifdef HAVE_GGHLITE
     printf("* GGHLite\n");
     if (test_lambdas(&gghlite_vtable, true))
         return 1;
+#endif
     return 0;
 }
 

@@ -43,3 +43,11 @@ libtool
 .libs
 config.h*
 stamp-h1
+vgcore.*
+*.log
+
+clt13
+gghlite
+libaesrand
+build/include
+tests/write_encoding
