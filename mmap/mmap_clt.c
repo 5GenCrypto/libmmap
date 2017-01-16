@@ -194,6 +194,7 @@ static const mmap_enc_vtable clt_enc_vtable =
   , .mul     = clt_enc_mul_wrapper
   , .is_zero = clt_enc_is_zero_wrapper
   , .encode  = clt_encode_wrapper
+  , .degree  = NULL
   , .print   = clt_print_wrapper
   , .size    = sizeof(clt_elem_t)
   };

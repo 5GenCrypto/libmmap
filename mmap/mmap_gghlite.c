@@ -486,14 +486,15 @@ static const mmap_enc_vtable gghlite_enc_vtable =
   , .clear = gghlite_enc_clear_wrapper
   , .fread = gghlite_enc_fread_raw_wrapper
   , .fwrite = gghlite_enc_fprint_raw_wrapper
-  , .size = sizeof(gghlite_enc_t)
   , .set = gghlite_enc_set_wrapper
   , .add = gghlite_enc_add_wrapper
   , .sub = gghlite_enc_sub_wrapper
   , .mul = gghlite_enc_mul_wrapper
   , .is_zero = gghlite_enc_is_zero_wrapper
   , .encode = gghlite_enc_set_gghlite_clr_wrapper
+  , .degree = NULL
   , .print = NULL
+  , .size = sizeof(gghlite_enc_t)
 };
 
 

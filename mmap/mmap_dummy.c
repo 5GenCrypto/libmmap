@@ -5,7 +5,8 @@
 typedef struct dummy_pp_t {
     mpz_t *moduli;
     size_t nslots;
-    size_t kappa;
+    unsigned int kappa;
+    int verbose;
     bool own;
 } dummy_pp_t;
 typedef struct dummy_sk_t {
@@ -14,7 +15,7 @@ typedef struct dummy_sk_t {
 } dummy_sk_t;
 typedef struct dummy_enc_t {
     mpz_t *elems;
-    size_t degree;
+    unsigned int degree;
     size_t nslots;
 } dummy_enc_t;
 
@@ -35,7 +36,7 @@ static void
 dummy_pp_read(const mmap_pp pp_, FILE *const fp)
 {
     dummy_pp_t *const pp = pp_;
-    fscanf(fp, "%lu\n", &pp->kappa);
+    fscanf(fp, "%u\n", &pp->kappa);
     fscanf(fp, "%lu\n", &pp->nslots);
     pp->moduli = calloc(pp->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < pp->nslots; ++i) {
@@ -43,6 +44,7 @@ dummy_pp_read(const mmap_pp pp_, FILE *const fp)
         mpz_inp_raw(pp->moduli[i], fp);
         (void) fscanf(fp, "\n");
     }
+    fscanf(fp, "%d\n", &pp->verbose);
     pp->own = true;
 }
 
@@ -50,12 +52,13 @@ static void
 dummy_pp_write(const mmap_ro_pp pp_, FILE *const fp)
 {
     const dummy_pp_t *const pp = pp_;
-    fprintf(fp, "%lu\n", pp->kappa);
+    fprintf(fp, "%u\n", pp->kappa);
     fprintf(fp, "%lu\n", pp->nslots);
     for (size_t i = 0; i < pp->nslots; ++i) {
         mpz_out_raw(fp, pp->moduli[i]);
         (void) fprintf(fp, "\n");
     }
+    fprintf(fp, "%d\n", pp->verbose);
 }
 
 static const mmap_pp_vtable dummy_pp_vtable =
@@ -71,7 +74,7 @@ dummy_sk_init(const mmap_sk sk_, size_t lambda, size_t kappa,
               aes_randstate_t rng, bool verbose)
 {
     dummy_sk_t *const sk = sk_;
-    (void) pows, (void) ncores, (void) verbose;
+    (void) pows, (void) ncores;
     if (nslots == 0)
         nslots = 1;
     sk->pp.moduli = calloc(nslots, sizeof(mpz_t));
@@ -81,6 +84,7 @@ dummy_sk_init(const mmap_sk sk_, size_t lambda, size_t kappa,
         mpz_nextprime(sk->pp.moduli[i], sk->pp.moduli[i]);
     }
     sk->pp.nslots = nslots;
+    sk->pp.verbose = verbose;
     sk->pp.own = false;
     sk->nzs = gamma;
     sk->pp.kappa = kappa;
@@ -108,26 +112,14 @@ static void
 dummy_sk_read(const mmap_sk sk_, FILE *const fp)
 {
     dummy_sk_t *const sk = sk_;
-    (void) fscanf(fp, "%lu\n", &sk->pp.kappa);
-    (void) fscanf(fp, "%lu\n", &sk->pp.nslots);
-    sk->pp.moduli = calloc(sk->pp.nslots, sizeof(mpz_t));
-    for (size_t i = 0; i < sk->pp.nslots; ++i) {
-        mpz_init(sk->pp.moduli[i]);
-        mpz_inp_raw(sk->pp.moduli[i], fp);
-        (void) fscanf(fp, "\n");
-    }
+    dummy_pp_read(&sk->pp, fp);
 }
 
 static void
 dummy_sk_write(const mmap_ro_sk sk_, FILE *const fp)
 {
     const dummy_sk_t *const sk = sk_;
-    (void) fprintf(fp, "%lu\n", sk->pp.kappa);
-    (void) fprintf(fp, "%lu\n", sk->pp.nslots);
-    for (size_t i = 0; i < sk->pp.nslots; ++i) {
-        mpz_out_raw(fp, sk->pp.moduli[i]);
-        (void) fprintf(fp, "\n");
-    }
+    dummy_pp_write(&sk->pp, fp);
 }
 
 static fmpz_t *
@@ -197,7 +189,7 @@ static void
 dummy_enc_fread(const mmap_enc enc_, FILE *const fp)
 {
     dummy_enc_t *const enc = enc_;
-    (void) fscanf(fp, "%lu\n", &enc->degree);
+    (void) fscanf(fp, "%u\n", &enc->degree);
     (void) fscanf(fp, "%lu\n", &enc->nslots);
     enc->elems = calloc(enc->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < enc->nslots; ++i) {
@@ -211,7 +203,7 @@ static void
 dummy_enc_fwrite(const mmap_ro_enc enc_, FILE *const fp)
 {
     const dummy_enc_t *const enc = enc_;
-    (void) fprintf(fp, "%lu\n", enc->degree);
+    (void) fprintf(fp, "%u\n", enc->degree);
     (void) fprintf(fp, "%lu\n", enc->nslots);
     for (size_t i = 0; i < enc->nslots; ++i) {
         mpz_out_raw(fp, enc->elems[i]);
@@ -295,7 +287,8 @@ dummy_enc_is_zero(const mmap_ro_enc enc_, const mmap_ro_pp pp_)
     const dummy_pp_t *const pp = pp_;
     bool ret = true;
     if (enc->degree != pp->kappa) {
-        fprintf(stderr, "warning: degrees not equal (%lu != %lu)\n", enc->degree, pp->kappa);
+        if (pp->verbose)
+            fprintf(stderr, "warning: degrees not equal (%u != %u)\n", enc->degree, pp->kappa);
     }
     for (size_t i = 0; i < pp->nslots; ++i) {
         ret &= (mpz_cmp_ui(enc->elems[i], 0) == 0);
@@ -327,6 +320,13 @@ dummy_print(const mmap_ro_enc enc_)
     printf("\n");
 }
 
+static unsigned int
+dummy_degree(const mmap_ro_enc enc_)
+{
+    const dummy_enc_t *const enc = enc_;
+    return enc->degree;
+}
+
 static const mmap_enc_vtable dummy_enc_vtable =
 { .init = dummy_enc_init,
   .clear = dummy_enc_clear,
@@ -338,6 +338,7 @@ static const mmap_enc_vtable dummy_enc_vtable =
   .mul = dummy_enc_mul,
   .is_zero = dummy_enc_is_zero,
   .encode = dummy_encode,
+  .degree = dummy_degree,
   .print = dummy_print,
   .size = sizeof(dummy_enc_t),
 };
