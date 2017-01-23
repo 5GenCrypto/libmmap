@@ -1,6 +1,7 @@
 #include "mmap.h"
 
 #include <assert.h>
+#include <string.h>
 
 typedef struct dummy_pp_t {
     mpz_t *moduli;
@@ -95,7 +96,9 @@ static mmap_ro_pp
 dummy_sk_pp(const mmap_ro_sk sk_)
 {
     const dummy_sk_t *const sk = sk_;
-    return &sk->pp;
+    dummy_pp_t *pp = calloc(1, sizeof pp[0]);
+    memcpy(pp, &sk->pp, sizeof pp[0]);
+    return pp;
 }
 
 static void
