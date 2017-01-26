@@ -22,12 +22,21 @@ AS_IF([test "$ac_cv_prog_cc_c99" = "no"], AC_MSG_ERROR([C99 support is required 
 
 AC_ARG_ENABLE(debug,
 [AS_HELP_STRING([--enable-debug], [enable debugging])],
-[], [enable-debug=yes])
+[], [enable_debug=yes])
 
-AC_ARG_ENABLE(gghlite,
-[AS_HELP_STRING([--disable-gghlite], [do not compile gghlite support])],
-[], [enable-gghlite=yes])
-AM_CONDITIONAL(HAVE_GGHLITE, test --enable-gghlite -eq 1)
+AC_ARG_WITH(gghlite,
+  [AS_HELP_STRING([--without-gghlite], [disable gghlite support])],
+  [], [with_gghlite=yes])
+LIBGGHLITE=
+AS_IF([test "x$with_gghlite" != xno],
+  [AC_SEARCH_LIBS(gghlite_init, gghlite,
+    [AC_DEFINE([HAVE_LIBGGHLITE], [1], [Define if you have libgghlite])],
+    [AC_MSG_FAILURE([gghlite test failed (--without-gghlite to disable)])])
+   AC_SEARCH_LIBS(_fmpz_clear_mpz, flint, [], AC_MSG_ERROR([libflint not found]))
+   AC_SEARCH_LIBS(fmpz_modp_matrix_inverse, oz, [], AC_MSG_ERROR([liboz not found]))
+  ]
+)
+AM_CONDITIONAL(HAVE_LIBGGHLITE, test "x$HAVE_LIBGGHLITE" != x1)
 
 AC_CHECK_HEADERS([omp.h])
 
@@ -50,12 +59,6 @@ AX_VALGRIND_CHECK()
 AC_SEARCH_LIBS(aes_randinit,aesrand, [], AC_MSG_ERROR([libaesrand not found]))
 AC_SEARCH_LIBS(__gmpz_init, gmp, [], AC_MSG_ERROR([libgmp not found]))
 AC_SEARCH_LIBS(clt_state_new, clt13, [], AC_MSG_ERROR([libclt13 not found]))
-if test x"$enable_gghlite" = x"yes"; then
-  AC_SEARCH_LIBS(gghlite_init, gghlite, [], AC_MSG_ERROR([libgghlite not found]))
-  AC_SEARCH_LIBS(fmpz_modp_matrix_inverse, oz, AC_MSG_ERROR([liboz not found]))
-  AC_SEARCH_LIBS(_fmpz_clear_mpz, flint, AC_MSG_ERROR([libflint not found]))
-  AC_DEFINE(HAVE_GGHLITE, 1, [Define whether gghlite is enabled])
-fi
 
 AC_CONFIG_FILES([Makefile mmap/Makefile tests/Makefile])
 

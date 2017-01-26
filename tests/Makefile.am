@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = foreign -Wall
 AM_CFLAGS=$(MY_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/mmap
-if HAVE_GGHLITE
+if HAVE_LIBGGHLITE
 AM_CFLAGS+=-I$(includedir)/oz
 endif
 
