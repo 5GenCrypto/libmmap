@@ -65,6 +65,7 @@ typedef struct {
     bool (*const is_zero)(const mmap_ro_enc enc, const mmap_ro_pp pp);
     void (*const encode)(const mmap_enc enc, const mmap_ro_sk sk, size_t n,
                          const fmpz_t *plaintext, int *group);
+    unsigned int (*const degree)(const mmap_ro_enc enc);
     void (*const print)(const mmap_ro_enc enc);
     const size_t size;
 } mmap_enc_vtable;
