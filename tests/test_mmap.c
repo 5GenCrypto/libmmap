@@ -2,7 +2,7 @@
 
 #include <mmap.h>
 #include <mmap_clt.h>
-#ifdef HAVE_GGHLITE
+#ifdef HAVE_LIBGGHLITE
 #  include <mmap_gghlite.h>
 #endif
 #include <mmap_dummy.h>
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
     printf("* CLT13\n");
     if (test_lambdas(&clt_vtable, false))
         return 1;
-#ifdef HAVE_GGHLITE
+#ifdef HAVE_LIBGGHLITE
     printf("* GGHLite\n");
     if (test_lambdas(&gghlite_vtable, true))
         return 1;

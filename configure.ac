@@ -27,16 +27,17 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(gghlite,
   [AS_HELP_STRING([--without-gghlite], [disable gghlite support])],
   [], [with_gghlite=yes])
-LIBGGHLITE=
 AS_IF([test "x$with_gghlite" != xno],
   [AC_SEARCH_LIBS(gghlite_init, gghlite,
-    [AC_DEFINE([HAVE_LIBGGHLITE], [1], [Define if you have libgghlite])],
-    [AC_MSG_FAILURE([gghlite test failed (--without-gghlite to disable)])])
+    [AC_DEFINE([HAVE_LIBGGHLITE], [1], [Define if you have libgghlite])
+     HAVE_LIBGGHLITE=true],
+    [AC_MSG_FAILURE([gghlite not found (use --without-gghlite)])])
    AC_SEARCH_LIBS(_fmpz_clear_mpz, flint, [], AC_MSG_ERROR([libflint not found]))
    AC_SEARCH_LIBS(fmpz_modp_matrix_inverse, oz, [], AC_MSG_ERROR([liboz not found]))
-  ]
+  ],
+  [HAVE_LIBGGHLITE=false]
 )
-AM_CONDITIONAL(HAVE_LIBGGHLITE, test "x$HAVE_LIBGGHLITE" != x1)
+AM_CONDITIONAL([HAVE_LIBGGHLITE], [test x$HAVE_LIBGGHLITE = xtrue])
 
 AC_CHECK_HEADERS([omp.h])
 
