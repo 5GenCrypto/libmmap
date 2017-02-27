@@ -2,7 +2,7 @@
 
 #include <mmap.h>
 #include <mmap_clt.h>
-#ifdef HAVE_GGHLITE
+#ifdef HAVE_LIBGGHLITE
 #  include <mmap_gghlite.h>
 #endif
 #include <mmap_dummy.h>
@@ -17,7 +17,7 @@
 
 /* XXX: Currently, fmpz_modp_matrix_inverse is part of gghlite, whereas it
    should really be within libmmap or something.  This should be fixed! */
-#ifdef HAVE_GGHLITE
+#ifdef HAVE_LIBGGHLITE
 
 ulong nzs = 2;
 ulong kappa = 2;

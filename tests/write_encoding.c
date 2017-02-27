@@ -13,6 +13,9 @@ int main(int argc, char **argv)
     const mmap_vtable *const mmap = &clt_vtable;
     /* const mmap_vtable *const mmap = &gghlite_vtable; */
 
+    if (argc == 1)
+        return 0;
+
     ulong lambda = atoi(argv[1]);
     ulong kappa  = atoi(argv[2]);
     ulong nzs    = kappa;

@@ -15,7 +15,8 @@ build () {
     url=$2
     branch=$3
 
-    echo building $path
+    echo
+    echo "building $path ($url $branch)"
     echo
 
     if [ ! -d $path ]; then
@@ -31,13 +32,11 @@ build () {
     popd
 }
 
-echo
 echo builddir = $builddir
-echo
 
-build libaesrand https://github.com/5GenCrypto/libaesrand master
-build clt13      https://github.com/5GenCrypto/clt13 master
-build gghlite    https://github.com/5GenCrypto/gghlite-flint master
+build libaesrand git@github.com:5GenCrypto/libaesrand master
+build clt13      git@github.com:5GenCrypto/clt13 master
+build gghlite    git@github.com:5GenCrypto/gghlite-flint master
 
 autoreconf -i
 ./configure --prefix=$builddir --enable-debug
