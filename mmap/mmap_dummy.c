@@ -75,7 +75,13 @@ dummy_sk_init(const mmap_sk sk_, size_t lambda, size_t kappa,
               aes_randstate_t rng, bool verbose)
 {
     dummy_sk_t *const sk = sk_;
-    (void) pows, (void) ncores;
+    if (verbose) {
+        fprintf(stderr, "  λ: %lu\n", lambda);
+        fprintf(stderr, "  κ: %lu\n", kappa);
+        fprintf(stderr, "  γ: %lu\n", gamma);
+        fprintf(stderr, "  nzs: %lu\n", nslots);
+        fprintf(stderr, "  ncores: %lu\n", ncores);
+    }
     if (nslots == 0)
         nslots = 1;
     sk->pp.moduli = calloc(nslots, sizeof(mpz_t));
