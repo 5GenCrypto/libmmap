@@ -32,7 +32,7 @@ AS_IF([test "x$with_gghlite" != xno],
     [AC_DEFINE([HAVE_LIBGGHLITE], [1], [Define if you have libgghlite])
      HAVE_LIBGGHLITE=true],
     [AC_MSG_FAILURE([gghlite not found (use --without-gghlite)])])
-   AC_SEARCH_LIBS(fmpz_init, flint, [], AC_MSG_ERROR([libflint not found]))
+   AC_SEARCH_LIBS(_fmpz_clear_mpz, flint, [], AC_MSG_ERROR([libflint not found]))
    AC_SEARCH_LIBS(fmpz_modp_matrix_inverse, oz, [], AC_MSG_ERROR([liboz not found]))
   ],
   [HAVE_LIBGGHLITE=false]
