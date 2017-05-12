@@ -201,7 +201,7 @@ dummy_enc_fread(const mmap_enc enc_, FILE *const fp)
     (void) fread(&enc->nslots, sizeof enc->nslots, 1, fp);
     enc->elems = calloc(enc->nslots, sizeof enc->elems[0]);
     for (size_t i = 0; i < enc->nslots; ++i) {
-        /* mpz_init(enc->elems[i]); */
+        mpz_init(enc->elems[i]);
         mpz_inp_raw(enc->elems[i], fp);
     }
 }
@@ -212,9 +212,8 @@ dummy_enc_fwrite(const mmap_ro_enc enc_, FILE *const fp)
     const dummy_enc_t *const enc = enc_;
     (void) fwrite(&enc->degree, sizeof enc->degree, 1, fp);
     (void) fwrite(&enc->nslots, sizeof enc->nslots, 1, fp);
-    for (size_t i = 0; i < enc->nslots; ++i) {
+    for (size_t i = 0; i < enc->nslots; ++i)
         mpz_out_raw(fp, enc->elems[i]);
-    }
 }
 
 static void
