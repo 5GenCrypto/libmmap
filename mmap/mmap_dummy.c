@@ -37,15 +37,14 @@ static void
 dummy_pp_read(const mmap_pp pp_, FILE *const fp)
 {
     dummy_pp_t *const pp = pp_;
-    fscanf(fp, "%u\n", &pp->kappa);
-    fscanf(fp, "%lu\n", &pp->nslots);
+    fread(&pp->kappa, sizeof pp->kappa, 1, fp);
+    fread(&pp->nslots, sizeof pp->nslots, 1, fp);
     pp->moduli = calloc(pp->nslots, sizeof(mpz_t));
     for (size_t i = 0; i < pp->nslots; ++i) {
         mpz_init(pp->moduli[i]);
         mpz_inp_raw(pp->moduli[i], fp);
-        (void) fscanf(fp, "\n");
     }
-    fscanf(fp, "%d\n", &pp->verbose);
+    fread(&pp->verbose, sizeof pp->verbose, 1, fp);
     pp->own = true;
 }
 
@@ -53,20 +52,19 @@ static void
 dummy_pp_write(const mmap_ro_pp pp_, FILE *const fp)
 {
     const dummy_pp_t *const pp = pp_;
-    fprintf(fp, "%u\n", pp->kappa);
-    fprintf(fp, "%lu\n", pp->nslots);
+    fwrite(&pp->kappa, sizeof pp->kappa, 1, fp);
+    fwrite(&pp->nslots, sizeof pp->nslots, 1, fp);
     for (size_t i = 0; i < pp->nslots; ++i) {
         mpz_out_raw(fp, pp->moduli[i]);
-        (void) fprintf(fp, "\n");
     }
-    fprintf(fp, "%d\n", pp->verbose);
+    fwrite(&pp->verbose, sizeof pp->verbose, 1, fp);
 }
 
-static const mmap_pp_vtable dummy_pp_vtable =
-{ .clear = dummy_pp_clear,
-  .fread = dummy_pp_read,
-  .fwrite = dummy_pp_write,
-  .size = sizeof(dummy_pp_t)
+static const mmap_pp_vtable dummy_pp_vtable = {
+    .clear = dummy_pp_clear,
+    .fread = dummy_pp_read,
+    .fwrite = dummy_pp_write,
+    .size = sizeof(dummy_pp_t)
 };
 
 static int
@@ -74,6 +72,7 @@ dummy_sk_init(const mmap_sk sk_, size_t lambda, size_t kappa,
               size_t gamma, int *pows, size_t nslots, size_t ncores,
               aes_randstate_t rng, bool verbose)
 {
+    (void) pows;
     dummy_sk_t *const sk = sk_;
     if (verbose) {
         fprintf(stderr, "  λ: %lu\n", lambda);
@@ -198,13 +197,12 @@ static void
 dummy_enc_fread(const mmap_enc enc_, FILE *const fp)
 {
     dummy_enc_t *const enc = enc_;
-    (void) fscanf(fp, "%u\n", &enc->degree);
-    (void) fscanf(fp, "%lu\n", &enc->nslots);
-    enc->elems = calloc(enc->nslots, sizeof(mpz_t));
+    (void) fread(&enc->degree, sizeof enc->degree, 1, fp);
+    (void) fread(&enc->nslots, sizeof enc->nslots, 1, fp);
+    enc->elems = calloc(enc->nslots, sizeof enc->elems[0]);
     for (size_t i = 0; i < enc->nslots; ++i) {
-        mpz_init(enc->elems[i]);
+        /* mpz_init(enc->elems[i]); */
         mpz_inp_raw(enc->elems[i], fp);
-        (void) fscanf(fp, "\n");
     }
 }
 
@@ -212,11 +210,10 @@ static void
 dummy_enc_fwrite(const mmap_ro_enc enc_, FILE *const fp)
 {
     const dummy_enc_t *const enc = enc_;
-    (void) fprintf(fp, "%u\n", enc->degree);
-    (void) fprintf(fp, "%lu\n", enc->nslots);
+    (void) fwrite(&enc->degree, sizeof enc->degree, 1, fp);
+    (void) fwrite(&enc->nslots, sizeof enc->nslots, 1, fp);
     for (size_t i = 0; i < enc->nslots; ++i) {
         mpz_out_raw(fp, enc->elems[i]);
-        (void) fprintf(fp, "\n");
     }
 }
 
