@@ -32,19 +32,11 @@
 *.dSYM/
 
 Makefile
-Makefile.in
-aclocal.m4
-autom4te.cache
-config.log
-config.status
-configure
-libtool
-.deps
-.libs
-config.h*
-stamp-h1
-vgcore.*
-*.log
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+test_mmap
+test_mmap_mat
 
 clt13
 gghlite

@@ -1,11 +1,9 @@
-#include "config.h"
-
-#include <mmap.h>
-#include <mmap_clt.h>
-#ifdef HAVE_LIBGGHLITE
-#  include <mmap_gghlite.h>
+#include <mmap/mmap.h>
+#include <mmap/mmap_clt.h>
+#ifdef HAVE_GGHLITE
+#  include <mmap/mmap_gghlite.h>
 #endif
-#include <mmap_dummy.h>
+#include <mmap/mmap_dummy.h>
 #include <flint/fmpz.h>
 #include <errno.h>
 #include <stdio.h>

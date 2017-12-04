@@ -1,7 +1,7 @@
 #ifndef _LIBMMAP_MMAP_H_
 #define _LIBMMAP_MMAP_H_
 
-#include <aesrand.h>
+#include <aesrand/aesrand.h>
 #include <stdbool.h>
 #include <stdio.h> /* for FILE */
 #include <gmp.h>

@@ -26,13 +26,13 @@ if [ x"$1" == x"" ]; then
     flags=''
 elif [ x"$1" == x"debug" ]; then
     echo "DEBUG mode"
-    flags='--enable-debug'
+    flags='-DCMAKE_BUILD_TYPE=Debug'
 elif [ x"$1" == x"clean" ]; then
     rm -rf build libaesrand clt13 gghlite
     exit 0
 elif [ x"$1" == x"no-gghlite" ]; then
     echo "Disable gghlite"
-    flags='--without-gghlite'
+    flags='-DHAVE_GGHLITE=OFF'
     gghlite='n'
 elif [ x"$1" == x"help" ]; then
     help $0
@@ -53,27 +53,27 @@ build () {
     echo
 
     if [ ! -d $path ]; then
-        git clone $url $path;
+        git clone $url $path -b $branch;
+    else
+        pushd $path; git pull origin $branch; popd
     fi
     pushd $path
-        git pull origin $branch
-        mkdir -p build/autoconf
-        autoreconf -i
-        ./configure --prefix=$builddir --enable-debug
+        cmake -DCMAKE_INSTALL_PREFIX="${builddir}" .
         make
         make install
     popd
 }
 
+echo
 echo builddir = $builddir
+echo
 
-build libaesrand git@github.com:5GenCrypto/libaesrand master
-build clt13      git@github.com:5GenCrypto/clt13 master
+build libaesrand git@github.com:5GenCrypto/libaesrand cmake
+build clt13      git@github.com:5GenCrypto/clt13 cmake
 if [ x"$gghlite" = x"y" ]; then
    build gghlite    git@github.com:5GenCrypto/gghlite-flint master
 fi
 
-autoreconf -i
-./configure --prefix=$builddir $flags
+rm -rf CMakeCache.txt CMakeFiles
+cmake "${flags}" .
 make
-make check
