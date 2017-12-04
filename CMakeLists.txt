@@ -43,7 +43,7 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 target_link_libraries(mmap INTERFACE "${OpenMP_C_FLAGS}")
 
 install(TARGETS mmap LIBRARY DESTINATION lib)
-install(FILES "${mmap_HEADERS}" DESTINATION include/mmap)
+install(FILES ${mmap_HEADERS} DESTINATION include/mmap)
 
 # Test files
 
