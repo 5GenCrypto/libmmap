@@ -49,7 +49,7 @@ dummy_pp_read(const mmap_pp pp_, FILE *const fp)
 }
 
 static void
-dummy_pp_write(const mmap_ro_pp pp_, FILE *const fp)
+dummy_pp_write(const mmap_pp pp_, FILE *const fp)
 {
     const dummy_pp_t *const pp = pp_;
     fwrite(&pp->kappa, sizeof pp->kappa, 1, fp);
@@ -97,8 +97,8 @@ dummy_sk_init(const mmap_sk sk_, size_t lambda, size_t kappa,
     return MMAP_OK;
 }
 
-static mmap_ro_pp
-dummy_sk_pp(const mmap_ro_sk sk_)
+static mmap_pp
+dummy_sk_pp(const mmap_sk sk_)
 {
     const dummy_sk_t *const sk = sk_;
     dummy_pp_t *pp = calloc(1, sizeof pp[0]);
@@ -107,7 +107,7 @@ dummy_sk_pp(const mmap_ro_sk sk_)
 }
 
 static void
-dummy_sk_clear(const mmap_sk sk_)
+dummy_sk_clear(mmap_sk sk_)
 {
     dummy_sk_t *const sk = sk_;
     for (size_t i = 0; i < sk->pp.nslots; ++i) {
@@ -117,21 +117,21 @@ dummy_sk_clear(const mmap_sk sk_)
 }
 
 static void
-dummy_sk_read(const mmap_sk sk_, FILE *const fp)
+dummy_sk_read(mmap_sk sk_, FILE *const fp)
 {
     dummy_sk_t *const sk = sk_;
     dummy_pp_read(&sk->pp, fp);
 }
 
 static void
-dummy_sk_write(const mmap_ro_sk sk_, FILE *const fp)
+dummy_sk_write(const mmap_sk sk_, FILE *const fp)
 {
     const dummy_sk_t *const sk = sk_;
-    dummy_pp_write(&sk->pp, fp);
+    dummy_pp_write((const mmap_pp) &sk->pp, fp);
 }
 
 static fmpz_t *
-dummy_sk_get_moduli(const mmap_ro_sk sk_)
+dummy_sk_get_moduli(const mmap_sk sk_)
 {
     const dummy_sk_t *const sk = sk_;
     fmpz_t *moduli;
@@ -145,14 +145,14 @@ dummy_sk_get_moduli(const mmap_ro_sk sk_)
 }
 
 static size_t
-dummy_sk_nslots(const mmap_ro_sk sk_)
+dummy_sk_nslots(const mmap_sk sk_)
 {
     const dummy_sk_t *const sk = sk_;
     return sk->pp.nslots;
 }
 
 static size_t
-dummy_sk_nzs(const mmap_ro_sk sk_)
+dummy_sk_nzs(const mmap_sk sk_)
 {
     const dummy_sk_t *const sk = sk_;
     return sk->nzs;
@@ -171,7 +171,7 @@ static const mmap_sk_vtable dummy_sk_vtable =
 };
 
 static void
-dummy_enc_init(const mmap_enc enc_, const mmap_ro_pp pp_)
+dummy_enc_init(const mmap_enc enc_, const mmap_pp pp_)
 {
     const dummy_pp_t *const pp = pp_;
     dummy_enc_t *const enc = enc_;
@@ -207,7 +207,7 @@ dummy_enc_fread(const mmap_enc enc_, FILE *const fp)
 }
 
 static void
-dummy_enc_fwrite(const mmap_ro_enc enc_, FILE *const fp)
+dummy_enc_fwrite(const mmap_enc enc_, FILE *const fp)
 {
     const dummy_enc_t *const enc = enc_;
     (void) fwrite(&enc->degree, sizeof enc->degree, 1, fp);
@@ -217,7 +217,7 @@ dummy_enc_fwrite(const mmap_ro_enc enc_, FILE *const fp)
 }
 
 static void
-dummy_enc_set(const mmap_enc dest_, const mmap_ro_enc src_)
+dummy_enc_set(const mmap_enc dest_, const mmap_enc src_)
 {
     dummy_enc_t *const dest = dest_;
     const dummy_enc_t *const src = src_;
@@ -229,8 +229,8 @@ dummy_enc_set(const mmap_enc dest_, const mmap_ro_enc src_)
 }
 
 static void
-dummy_enc_add(const mmap_enc dest_, const mmap_ro_pp pp_,
-              const mmap_ro_enc a_, const mmap_ro_enc b_)
+dummy_enc_add(const mmap_enc dest_, const mmap_pp pp_,
+              const mmap_enc a_, const mmap_enc b_)
 {
     dummy_enc_t *const dest = dest_;
     const dummy_pp_t *const pp = pp_;
@@ -248,8 +248,8 @@ dummy_enc_add(const mmap_enc dest_, const mmap_ro_pp pp_,
 }
 
 static void
-dummy_enc_sub(const mmap_enc dest_, const mmap_ro_pp pp_,
-              const mmap_ro_enc a_, const mmap_ro_enc b_)
+dummy_enc_sub(const mmap_enc dest_, const mmap_pp pp_,
+              const mmap_enc a_, const mmap_enc b_)
 {
     dummy_enc_t *const dest = dest_;
     const dummy_pp_t *const pp = pp_;
@@ -267,8 +267,8 @@ dummy_enc_sub(const mmap_enc dest_, const mmap_ro_pp pp_,
 }
 
 static void
-dummy_enc_mul(const mmap_enc dest_, const mmap_ro_pp pp_,
-              const mmap_ro_enc a_, const mmap_ro_enc b_)
+dummy_enc_mul(const mmap_enc dest_, const mmap_pp pp_,
+              const mmap_enc a_, const mmap_enc b_)
 {
     dummy_enc_t *const dest = dest_;
     const dummy_pp_t *const pp = pp_;
@@ -286,7 +286,7 @@ dummy_enc_mul(const mmap_enc dest_, const mmap_ro_pp pp_,
 }
 
 static bool
-dummy_enc_is_zero(const mmap_ro_enc enc_, const mmap_ro_pp pp_)
+dummy_enc_is_zero(const mmap_enc enc_, const mmap_pp pp_)
 {
     const dummy_enc_t *const enc = enc_;
     const dummy_pp_t *const pp = pp_;
@@ -302,7 +302,7 @@ dummy_enc_is_zero(const mmap_ro_enc enc_, const mmap_ro_pp pp_)
 }
 
 static void
-dummy_encode(const mmap_enc enc_, const mmap_ro_sk sk_,
+dummy_encode(const mmap_enc enc_, const mmap_sk sk_,
              size_t n, const fmpz_t *plaintext, int *group)
 {
     dummy_enc_t *const enc = enc_;
@@ -316,7 +316,7 @@ dummy_encode(const mmap_enc enc_, const mmap_ro_sk sk_,
 }
 
 static void
-dummy_print(const mmap_ro_enc enc_)
+dummy_print(const mmap_enc enc_)
 {
     const dummy_enc_t *const enc = enc_;
     for (size_t i = 0; i < enc->nslots; ++i) {
@@ -326,7 +326,7 @@ dummy_print(const mmap_ro_enc enc_)
 }
 
 static unsigned int
-dummy_degree(const mmap_ro_enc enc_)
+dummy_degree(const mmap_enc enc_)
 {
     const dummy_enc_t *const enc = enc_;
     return enc->degree;

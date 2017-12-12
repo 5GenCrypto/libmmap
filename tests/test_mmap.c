@@ -23,7 +23,7 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     int pows[nzs], top_level[nzs], ix0[nzs], ix1[nzs];
     aes_randstate_t rng;
     mmap_sk sk1, sk2;
-    mmap_pp pp2;
+    mmap_pp pp1, pp2;
     mmap_enc enc0, enc1, enc;
     fmpz_t x1, x2, zero, one;
     int ok = 1;
@@ -62,13 +62,16 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
         fclose(f);
 
         f = tmpfile();
-        mmap->pp->fwrite(mmap->sk->pp(sk2), f);
+        pp1 = mmap->sk->pp(sk2);
+        mmap->pp->fwrite(pp1, f);
+        /* mmap->pp->clear(pp1); */
+        free(pp1);
         rewind(f);
         pp2 = malloc(mmap->pp->size);
         mmap->pp->fread(pp2, f);
         fclose(f);
     }
-    mmap_ro_pp pp1 = mmap->sk->pp(sk1);
+    pp1 = mmap->sk->pp(sk1);
 
     fmpz_init_set_ui(x1, 0);
     fmpz_init_set_ui(x2, 0);
@@ -107,6 +110,8 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
         mmap->enc->clear(enc0);
         rewind(f);
         mmap->enc->fread(enc0, f);
+        mmap->enc->clear(enc0);
+        mmap->enc->init(enc0, pp1);
         fclose(f);
     }
     for (ulong i = 0; i < nzs; i++) {
@@ -145,6 +150,8 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     mmap->enc->encode(enc1, sk1, 1, &x1, top_level);
     mmap->enc->sub(enc, pp1, enc0, enc1);
     ok &= expect("is_zero(x - x)", 1, mmap->enc->is_zero(enc, pp1));
+    mmap->pp->clear(pp1);
+    free(pp1);
 
     mmap->enc->clear(enc0);
     mmap->enc->clear(enc1);
@@ -190,7 +197,7 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
 
 static int test_lambdas(const mmap_vtable *vtable, bool is_gghlite)
 {
-    for (int i = 0; i < sizeof(lambdas) / (sizeof(lambdas[0])); ++i) {
+    for (size_t i = 0; i < sizeof(lambdas) / (sizeof(lambdas[0])); ++i) {
         printf("** lambda = %lu\n", lambdas[i]);
         if (test(vtable, lambdas[i], is_gghlite))
             return 1;
@@ -200,6 +207,7 @@ static int test_lambdas(const mmap_vtable *vtable, bool is_gghlite)
 
 int main(int argc, char **argv)
 {
+    (void) argv;
     deterministic = argc > 1;
     printf("* Dummy\n");
     if (test_lambdas(&dummy_vtable, false))

@@ -2,7 +2,7 @@
 #include <assert.h>
 
 void
-mmap_enc_mat_init(const_mmap_vtable mmap, const mmap_ro_pp params,
+mmap_enc_mat_init(const_mmap_vtable mmap, const mmap_pp params,
                   mmap_enc_mat_t m, int nrows, int ncols)
 {
     m->nrows = nrows;
@@ -35,7 +35,7 @@ mmap_enc_mat_clear(const_mmap_vtable mmap, mmap_enc_mat_t m)
 
 
 void
-mmap_enc_mat_mul(const_mmap_vtable mmap, const mmap_ro_pp params,
+mmap_enc_mat_mul(const_mmap_vtable mmap, const mmap_pp params,
                  mmap_enc_mat_t r, mmap_enc_mat_t m1, mmap_enc_mat_t m2)
 {
     mmap_enc tmp;
@@ -72,7 +72,7 @@ mmap_enc_mat_mul(const_mmap_vtable mmap, const mmap_ro_pp params,
 }
 
 void
-mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_ro_pp params,
+mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_pp params,
                      mmap_enc_mat_t r, mmap_enc_mat_t m1, mmap_enc_mat_t m2)
 {
     mmap_enc_mat_t tmp_mat;

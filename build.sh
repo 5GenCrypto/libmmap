@@ -58,7 +58,7 @@ build () {
         pushd $path; git pull origin $branch; popd
     fi
     pushd $path
-        cmake -DCMAKE_INSTALL_PREFIX="${builddir}" .
+        cmake -DCMAKE_INSTALL_PREFIX="${builddir}" ${flags} .
         make
         make install
     popd
@@ -69,11 +69,11 @@ echo builddir = $builddir
 echo
 
 build libaesrand git@github.com:5GenCrypto/libaesrand cmake
-build clt13      git@github.com:5GenCrypto/clt13 cmake
+build clt13      git@github.com:5GenCrypto/clt13 dev
 if [ x"$gghlite" = x"y" ]; then
    build gghlite    git@github.com:5GenCrypto/gghlite-flint master
 fi
 
 rm -rf CMakeCache.txt CMakeFiles
-cmake "${flags}" .
+cmake ${flags} .
 make
