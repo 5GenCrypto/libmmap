@@ -68,32 +68,32 @@ static const mmap_pp_vtable dummy_pp_vtable = {
 };
 
 static int
-dummy_sk_init(const mmap_sk sk_, size_t lambda, size_t kappa,
-              size_t gamma, int *pows, size_t nslots, size_t ncores,
+dummy_sk_init(const mmap_sk sk_, const mmap_sk_params *params,
+              const mmap_sk_opt_params *opts, size_t ncores,
               aes_randstate_t rng, bool verbose)
 {
-    (void) pows;
+    size_t nslots;
     dummy_sk_t *const sk = sk_;
     if (verbose) {
-        fprintf(stderr, "  λ: %lu\n", lambda);
-        fprintf(stderr, "  κ: %lu\n", kappa);
-        fprintf(stderr, "  γ: %lu\n", gamma);
-        fprintf(stderr, "  nzs: %lu\n", nslots);
+        fprintf(stderr, "  λ: %lu\n", params->lambda);
+        fprintf(stderr, "  κ: %lu\n", params->kappa);
+        fprintf(stderr, "  γ: %lu\n", params->gamma);
         fprintf(stderr, "  ncores: %lu\n", ncores);
     }
-    if (nslots == 0)
-        nslots = 1;
-    sk->pp.moduli = calloc(nslots, sizeof(mpz_t));
+    nslots = opts && opts->nslots ? opts->nslots : 1;
+    sk->pp.moduli = calloc(nslots, sizeof sk->pp.moduli[0]);
     for (size_t i = 0; i < nslots; ++i) {
         mpz_init(sk->pp.moduli[i]);
-        mpz_urandomb_aes(sk->pp.moduli[i], rng, lambda);
+        mpz_urandomb_aes(sk->pp.moduli[i], rng, params->lambda);
         mpz_nextprime(sk->pp.moduli[i], sk->pp.moduli[i]);
     }
+    if (opts && opts->modulus)
+        mpz_set(sk->pp.moduli[0], opts->modulus);
     sk->pp.nslots = nslots;
     sk->pp.verbose = verbose;
     sk->pp.own = false;
-    sk->nzs = gamma;
-    sk->pp.kappa = kappa;
+    sk->nzs = params->gamma;
+    sk->pp.kappa = params->kappa;
     return MMAP_OK;
 }
 

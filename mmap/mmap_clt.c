@@ -30,31 +30,38 @@ static const mmap_pp_vtable clt_pp_vtable =
   };
 
 static int
-clt_state_init_wrapper(mmap_sk sk, size_t lambda, size_t kappa,
-                       size_t gamma, int *pows, size_t nslots, size_t ncores,
+clt_state_init_wrapper(mmap_sk sk, const mmap_sk_params *params_,
+                       const mmap_sk_opt_params *opts_, size_t ncores,
                        aes_randstate_t rng, bool verbose)
 {
     int ret = MMAP_OK;
     bool new_pows = false;
+    int *pows;
     int flags = CLT_FLAG_OPT_CRT_TREE | CLT_FLAG_OPT_PARALLEL_ENCODE;
     if (verbose)
         flags |= CLT_FLAG_VERBOSE;
 
+    if (params_ == NULL)
+        return MMAP_ERR;
+
+    pows = params_->pows;
     if (pows == NULL) {
         new_pows = true;
-        pows = calloc(gamma, sizeof pows[0]);
-        for (size_t i = 0; i < gamma; i++) {
+        pows = calloc(params_->gamma, sizeof pows[0]);
+        for (size_t i = 0; i < params_->gamma; i++) {
             pows[i] = 1;
         }
     }
     clt_params_t params = {
-        .lambda = lambda,
-        .kappa = kappa,
-        .nzs = gamma,
+        .lambda = params_->lambda,
+        .kappa = params_->kappa,
+        .nzs = params_->gamma,
         .pows = pows,
     };
     clt_params_opt_t opts = {
-        .min_slots = nslots,
+        .min_slots = opts_ ? opts_->nslots : 0,
+        .moduli = opts_ && opts_->modulus ? &opts_->modulus : NULL,
+        .nmoduli = opts_ && opts_->modulus ? 1 : 0,
     };
     *(clt_state_t **)sk = clt_state_new(&params, &opts, ncores, flags, rng);
     if (*(clt_state_t **)sk == NULL)

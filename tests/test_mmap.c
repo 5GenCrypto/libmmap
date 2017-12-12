@@ -43,10 +43,18 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     for (size_t i = 0; i < nzs; i++)
         pows[i] = 1;
 
+    mmap_sk_params params = {
+        .lambda = lambda,
+        .kappa = 1,
+        .gamma = nzs,
+        .pows = pows,
+    };
+
     sk1 = malloc(mmap->sk->size);
     sk2 = malloc(mmap->sk->size);
-    mmap->sk->init(sk1, lambda, 1, nzs, pows, 0, 0, rng, true);
-    mmap->sk->init(sk2, lambda, 2, nzs, pows, 0, 0, rng, true);
+    mmap->sk->init(sk1, &params, NULL, 0, rng, true);
+    params.kappa = 2;
+    mmap->sk->init(sk2, &params, NULL, 0, rng, true);
 
     /* Test serialization */
     {

@@ -19,9 +19,9 @@ typedef void *mmap_sk;
 typedef void *mmap_enc;
 
 /* read-only versions */
-typedef const void *mmap_ro_pp;
-typedef const void *mmap_ro_sk;
-typedef const void *mmap_ro_enc;
+/* typedef const void *mmap_ro_pp; */
+/* typedef const void *mmap_ro_sk; */
+/* typedef const void *mmap_ro_enc; */
 
 /* If we call fread, we will call clear. In particular, we will not call clear
  * on the mmap_pp we retrieve from an mmap_sk. */
@@ -33,12 +33,20 @@ typedef struct {
 } mmap_pp_vtable;
 
 typedef struct {
-    /* lambda: security parameter
-     * kappa: how many multiplications we intend to do
-     * gamma: the size of the universe that we will zero-test things at
-     */
-    int (*const init)(mmap_sk sk, size_t lambda, size_t kappa,
-                      size_t gamma, int *pows, size_t nslots, size_t ncores,
+    size_t lambda;              /* security parameter */
+    size_t kappa;               /* multilinearity */
+    size_t gamma;               /* size of zero-test universe */
+    int *pows;
+} mmap_sk_params;
+
+typedef struct {
+    size_t nslots;              /* number of required slots */
+    mpz_t *modulus;             /* plaintext modulus of first slot */
+} mmap_sk_opt_params;
+
+typedef struct {
+    int (*const init)(mmap_sk sk, const mmap_sk_params *params,
+                      const mmap_sk_opt_params *opts, size_t ncores,
                       aes_randstate_t rng, bool verbose);
     void (*const clear)(mmap_sk sk);
     void (*const fread)(mmap_sk sk, FILE *fp);
