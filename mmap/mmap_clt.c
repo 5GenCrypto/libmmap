@@ -197,8 +197,9 @@ clt_enc_is_zero_wrapper(const mmap_enc enc, const mmap_pp pp)
 
 static void
 clt_encode_wrapper(mmap_enc enc, const mmap_sk sk, size_t n,
-                   const fmpz_t *plaintext, int *group)
+                   const fmpz_t *plaintext, int *ix, size_t level)
 {
+    (void) level;
     mpz_t *ins;
 
     ins = calloc(n, sizeof ins[0]);
@@ -206,7 +207,7 @@ clt_encode_wrapper(mmap_enc enc, const mmap_sk sk, size_t n,
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
-    clt_encode(*(clt_elem_t **) enc, *(clt_state_t **) sk, n, ins, group);
+    clt_encode(*(clt_elem_t **) enc, *(clt_state_t **) sk, n, ins, ix);
     for (size_t i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }

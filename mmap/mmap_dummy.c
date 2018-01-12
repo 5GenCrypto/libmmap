@@ -303,12 +303,12 @@ dummy_enc_is_zero(const mmap_enc enc_, const mmap_pp pp_)
 }
 
 static void
-dummy_encode(const mmap_enc enc_, const mmap_sk sk_,
-             size_t n, const fmpz_t *plaintext, int *group)
+dummy_encode(const mmap_enc enc_, const mmap_sk sk_, size_t n,
+             const fmpz_t *plaintext, int *ix, size_t level)
 {
     dummy_enc_t *const enc = enc_;
     const dummy_sk_t *const sk = sk_;
-    (void) sk, (void) group;
+    (void) sk; (void) ix; (void) level;
     assert(n <= sk->pp.nslots);
     enc->degree = 1;
     for (size_t i = 0; i < n; ++i) {

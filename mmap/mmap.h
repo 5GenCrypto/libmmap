@@ -9,9 +9,9 @@
 #define MMAP_OK 0
 #define MMAP_ERR (-1)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* #ifdef __cplusplus */
+/* extern "C" { */
+/* #endif */
 
 typedef void *mmap_pp;
 typedef void *mmap_sk;
@@ -34,8 +34,22 @@ typedef struct {
 } mmap_sk_params;
 
 typedef struct {
+    size_t source;
+    size_t target;
+    int *ix;
+} mmap_polylog_switch_params;
+
+typedef struct {
+    size_t nlevels;
+    size_t nswitches;
+    mmap_polylog_switch_params *sparams;
+} mmap_polylog_sk_params;
+
+typedef struct {
     size_t nslots;              /* number of required slots */
     mpz_t *modulus;             /* plaintext modulus of first slot */
+    bool is_polylog;
+    mmap_polylog_sk_params polylog;
 } mmap_sk_opt_params;
 
 typedef struct {
@@ -62,7 +76,8 @@ typedef struct {
     void (*const sub)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b);
     void (*const mul)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b, size_t idx);
     bool (*const is_zero)(const mmap_enc enc, const mmap_pp pp);
-    void (*const encode)(mmap_enc enc, const mmap_sk sk, size_t n, const fmpz_t *plaintext, int *group);
+    void (*const encode)(mmap_enc enc, const mmap_sk sk, size_t n,
+                         const fmpz_t *plaintext, int *ix, size_t level);
     unsigned int (*const degree)(const mmap_enc enc);
     void (*const print)(const mmap_enc enc);
     const size_t size;
@@ -95,8 +110,8 @@ typedef const mmap_vtable *const const_mmap_vtable;
 /* mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_pp params, */
 /*                      mmap_enc_mat_t r, mmap_enc_mat_t m1, mmap_enc_mat_t m2); */
 
-#ifdef __cplusplus
-}
-#endif
+/* #ifdef __cplusplus */
+/* } */
+/* #endif */
 
 #endif
