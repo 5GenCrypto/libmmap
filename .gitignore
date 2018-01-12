@@ -43,3 +43,5 @@ gghlite
 libaesrand
 build/include
 tests/write_encoding
+
+install_manifest.txt
