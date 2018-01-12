@@ -88,7 +88,7 @@ dummy_sk_init(const mmap_sk sk_, const mmap_sk_params *params,
         mpz_nextprime(sk->pp.moduli[i], sk->pp.moduli[i]);
     }
     if (opts && opts->modulus)
-        mpz_set(sk->pp.moduli[0], opts->modulus);
+        mpz_set(sk->pp.moduli[0], *opts->modulus);
     sk->pp.nslots = nslots;
     sk->pp.verbose = verbose;
     sk->pp.own = false;
@@ -268,8 +268,9 @@ dummy_enc_sub(const mmap_enc dest_, const mmap_pp pp_,
 
 static void
 dummy_enc_mul(const mmap_enc dest_, const mmap_pp pp_,
-              const mmap_enc a_, const mmap_enc b_)
+              const mmap_enc a_, const mmap_enc b_, size_t idx)
 {
+    (void) idx;
     dummy_enc_t *const dest = dest_;
     const dummy_pp_t *const pp = pp_;
     const dummy_enc_t *const a = a_;

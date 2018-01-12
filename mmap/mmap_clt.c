@@ -60,7 +60,7 @@ clt_state_init_wrapper(mmap_sk sk, const mmap_sk_params *params_,
     };
     clt_opt_params_t opts = {
         .slots = opts_ ? opts_->nslots : 0,
-        .moduli = opts_ && opts_->modulus ? &opts_->modulus : NULL,
+        .moduli = (opts_ && opts_->modulus) ? opts_->modulus : NULL,
         .nmoduli = opts_ && opts_->modulus ? 1 : 0,
     };
     *(clt_state_t **)sk = clt_state_new(&params, &opts, ncores, flags, rng);
@@ -183,8 +183,9 @@ clt_enc_sub_wrapper(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, con
 }
 
 static void
-clt_enc_mul_wrapper(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b)
+clt_enc_mul_wrapper(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b, size_t idx)
 {
+    (void) idx;
     clt_elem_mul(*(clt_elem_t **)dest, *(clt_pp_t **) pp, *(clt_elem_t **)a, *(clt_elem_t **)b);
 }
 
@@ -205,7 +206,7 @@ clt_encode_wrapper(mmap_enc enc, const mmap_sk sk, size_t n,
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
-    clt_encode(*(clt_elem_t **) enc, *(clt_state_t **) sk, n, ins, group, NULL);
+    clt_encode(*(clt_elem_t **) enc, *(clt_state_t **) sk, n, ins, group);
     for (size_t i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }

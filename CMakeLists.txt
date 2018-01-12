@@ -14,12 +14,13 @@ message(STATUS "GGHLite: ${MMAP_HAVE_GGHLITE}")
 
 set(mmap_SOURCES
   mmap/mmap_clt.c
+  mmap/mmap_clt_pl.c
   mmap/mmap_dummy.c
-  mmap/mmap_enc_mat.c
   )
 set(mmap_HEADERS
   mmap/mmap.h
   mmap/mmap_clt.h
+  mmap/mmap_clt_pl.h
   mmap/mmap_dummy.h
   )
 if(MMAP_HAVE_GGHLITE)
@@ -37,7 +38,7 @@ if(MMAP_HAVE_GGHLITE)
 endif(MMAP_HAVE_GGHLITE)
 
 include(FindOpenMP)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -std=gnu11 -march=native ${OpenMP_C_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Werror -std=gnu11 -march=native ${OpenMP_C_FLAGS}")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -pg -ggdb -O0")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 target_link_libraries(mmap INTERFACE "${OpenMP_C_FLAGS}")
@@ -58,4 +59,4 @@ macro(add_test_ _name)
 endmacro()
 
 add_test_(test_mmap)
-add_test_(test_mmap_mat)
+# add_test_(test_mmap_mat)

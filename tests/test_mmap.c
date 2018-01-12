@@ -31,10 +31,10 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     if(deterministic) {
         /* chosen by fair die roll */
         srand(2649794798);
-        aes_randinit_seedn(rng, (unsigned char []){
+        aes_randinit_seedn(rng, (char *)(unsigned char []){
                 92,44,135,51,20,243,175,157,99,32,191,224,201,240,59,140,200,
                     118,49,100,80,43,239,243,238,221,92,36,46,133,23,35},
-            32, (unsigned char []){}, 0);
+            32, NULL, 0);
     } else {
         srand(time(NULL));
         aes_randinit(rng);
@@ -133,29 +133,29 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     }
 
     if (!is_gghlite) {
-        mmap->enc->encode(enc0, sk1, 1, &zero, top_level);
-        mmap->enc->encode(enc1, sk1, 1, &zero, top_level);
+        mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&zero, top_level);
+        mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&zero, top_level);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + 0)", 1, mmap->enc->is_zero(enc, pp1));
 
-        mmap->enc->encode(enc0, sk1, 1, &zero, top_level);
-        mmap->enc->encode(enc1, sk1, 1, &one,  top_level);
+        mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&zero, top_level);
+        mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&one,  top_level);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + 1)", 0, mmap->enc->is_zero(enc, pp1));
 
-        mmap->enc->encode(enc0, sk1, 1, &zero, top_level);
-        mmap->enc->encode(enc1, sk1, 1, &x1,   top_level);
+        mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&zero, top_level);
+        mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&x1,   top_level);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + x)", 0, mmap->enc->is_zero(enc, pp1));
         /* TODO: why doesn't this make gghlite happy? */
-        mmap->enc->encode(enc0, sk1, 1, &x1, top_level);
-        mmap->enc->encode(enc1, sk1, 1, &x1, top_level);
+        mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&x1, top_level);
+        mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&x1, top_level);
         mmap->enc->add(enc, pp1, enc, enc);
         ok &= expect("is_zero(x + x)", 0, mmap->enc->is_zero(enc, pp1));
     }
 
-    mmap->enc->encode(enc0, sk1, 1, &x1, top_level);
-    mmap->enc->encode(enc1, sk1, 1, &x1, top_level);
+    mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&x1, top_level);
+    mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&x1, top_level);
     mmap->enc->sub(enc, pp1, enc0, enc1);
     ok &= expect("is_zero(x - x)", 1, mmap->enc->is_zero(enc, pp1));
     mmap->pp->clear(pp1);
@@ -170,20 +170,20 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     mmap->enc->init(enc,  pp2);
 
     if (!is_gghlite) {
-        mmap->enc->encode(enc0, sk2, 1, &x2  , ix0);
-        mmap->enc->encode(enc1, sk2, 1, &zero, ix1);
-        mmap->enc->mul(enc, pp2, enc0, enc1);
+        mmap->enc->encode(enc0, sk2, 1, (const fmpz_t *)&x2  , ix0);
+        mmap->enc->encode(enc1, sk2, 1, (const fmpz_t *)&zero, ix1);
+        mmap->enc->mul(enc, pp2, enc0, enc1, 0);
         ok &= expect("is_zero(x * 0)", 1, mmap->enc->is_zero(enc, pp2));
 
-        mmap->enc->encode(enc0, sk2, 1, &x2 , ix0);
-        mmap->enc->encode(enc1, sk2, 1, &one, ix1);
-        mmap->enc->mul(enc, pp2, enc0, enc1);
+        mmap->enc->encode(enc0, sk2, 1, (const fmpz_t *)&x2 , ix0);
+        mmap->enc->encode(enc1, sk2, 1, (const fmpz_t *)&one, ix1);
+        mmap->enc->mul(enc, pp2, enc0, enc1, 0);
         ok &= expect("is_zero(x * 1)", 0, mmap->enc->is_zero(enc, pp2));
     }
-    
-    mmap->enc->encode(enc0, sk2, 1, &x2, ix0);
-    mmap->enc->encode(enc1, sk2, 1, &x2, ix1);
-    mmap->enc->mul(enc, pp2, enc0, enc1);
+
+    mmap->enc->encode(enc0, sk2, 1, (const fmpz_t *)&x2, ix0);
+    mmap->enc->encode(enc1, sk2, 1, (const fmpz_t *)&x2, ix1);
+    mmap->enc->mul(enc, pp2, enc0, enc1, 0);
     ok &= expect("is_zero(x * x)", 0, mmap->enc->is_zero(enc, pp2));
 
     mmap->enc->clear(enc0);
