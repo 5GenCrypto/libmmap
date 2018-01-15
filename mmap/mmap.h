@@ -17,13 +17,12 @@ typedef void *mmap_pp;
 typedef void *mmap_sk;
 typedef void *mmap_enc;
 
-/* If we call fread, we will call clear. In particular, we will not call clear
+/* If we call fread, we will call free. In particular, we will not call free
  * on the mmap_pp we retrieve from an mmap_sk. */
 typedef struct {
-    void (*const clear)(const mmap_pp pp);
-    void (*const fread)(const mmap_pp pp, FILE *fp);
-    void (*const fwrite)(const mmap_pp pp, FILE *fp);
-    const size_t size;
+    void (*const free)(const mmap_pp pp);
+    mmap_pp (*const fread)(FILE *fp);
+    int (*const fwrite)(const mmap_pp pp, FILE *fp);
 } mmap_pp_vtable;
 
 typedef struct {
@@ -53,34 +52,32 @@ typedef struct {
 } mmap_sk_opt_params;
 
 typedef struct {
-    int (*const init)(mmap_sk sk, const mmap_sk_params *params,
-                      const mmap_sk_opt_params *opts, size_t ncores,
-                      aes_randstate_t rng, bool verbose);
-    void (*const clear)(mmap_sk sk);
-    void (*const fread)(mmap_sk sk, FILE *fp);
-    void (*const fwrite)(const mmap_sk sk, FILE *fp);
-    mmap_pp (*const pp)(const mmap_sk sk);
-    fmpz_t * (*const plaintext_fields)(const mmap_sk sk);
+    mmap_sk (*const new)(const mmap_sk_params *params,
+                         const mmap_sk_opt_params *opts, size_t ncores,
+                         aes_randstate_t rng, bool verbose);
+    void (*const free)(mmap_sk sk);
+    mmap_sk (*const fread)(FILE *fp);
+    int (*const fwrite)(const mmap_sk sk, FILE *fp);
+    mmap_pp (*const pp)(mmap_sk sk);
+    mpz_t * (*const plaintext_fields)(const mmap_sk sk);
     size_t (*const nslots)(const mmap_sk sk);
     size_t (*const nzs)(const mmap_sk sk);
-    const size_t size;
 } mmap_sk_vtable;
 
 typedef struct {
-    void (*const init)(mmap_enc enc, const mmap_pp pp);
-    void (*const clear)(mmap_enc enc);
-    void (*const fread)(mmap_enc enc, FILE *fp);
-    void (*const fwrite)(const mmap_enc enc, FILE *fp);
+    mmap_enc (*const new)(const mmap_pp pp);
+    void (*const free)(mmap_enc enc);
+    mmap_enc (*const fread)(FILE *fp);
+    int (*const fwrite)(const mmap_enc enc, FILE *fp);
     void (*const set)(mmap_enc dest, const mmap_enc src);
-    void (*const add)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b);
-    void (*const sub)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b);
-    void (*const mul)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b, size_t idx);
+    int (*const add)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b);
+    int (*const sub)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b);
+    int (*const mul)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b, size_t idx);
     bool (*const is_zero)(const mmap_enc enc, const mmap_pp pp);
-    void (*const encode)(mmap_enc enc, const mmap_sk sk, size_t n,
-                         const fmpz_t *plaintext, int *ix, size_t level);
+    int (*const encode)(mmap_enc enc, const mmap_sk sk, size_t n,
+                        mpz_t *plaintext, int *ix, size_t level);
     unsigned int (*const degree)(const mmap_enc enc);
     void (*const print)(const mmap_enc enc);
-    const size_t size;
 } mmap_enc_vtable;
 
 typedef struct {

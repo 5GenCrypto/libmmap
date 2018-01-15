@@ -32,7 +32,7 @@ elif [ x"$1" == x"clean" ]; then
     exit 0
 elif [ x"$1" == x"no-gghlite" ]; then
     echo "Disable gghlite"
-    flags='-DHAVE_GGHLITE=OFF'
+    flags='-DHAVE_GGHLITE=OFF -DCMAKE_BUILD_TYPE=Debug'
     gghlite='n'
 elif [ x"$1" == x"help" ]; then
     help $0
