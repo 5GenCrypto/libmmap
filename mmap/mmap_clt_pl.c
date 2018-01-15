@@ -5,36 +5,35 @@
 #include <gmp.h>
 
 static void
-pp_clear(mmap_pp pp)
+pp_free(mmap_pp pp)
 {
-    clt_pl_pp_free(*(clt_pl_pp_t **) pp);
+    clt_pl_pp_free(pp);
 }
 
-static void
-pp_fread(mmap_pp pp, FILE *fp)
+static mmap_pp
+pp_fread(FILE *fp)
 {
-    *(clt_pl_pp_t **) pp = clt_pl_pp_fread(fp);
+    return clt_pl_pp_fread(fp);
 }
 
-static void
+static int
 pp_fwrite(const mmap_pp pp, FILE *fp)
 {
-    clt_pl_pp_fwrite(*(clt_pl_pp_t **) pp, fp);
+    return clt_pl_pp_fwrite(pp, fp);
 }
 
 static const mmap_pp_vtable clt_pl_pp_vtable =
-  { .clear  = pp_clear
+  { .free   = pp_free
   , .fread  = pp_fread
   , .fwrite = pp_fwrite
-  , .size   = sizeof(clt_pl_pp_t *)
   };
 
-static int
-state_init(mmap_sk sk, const mmap_sk_params *params_,
-           const mmap_sk_opt_params *opts_, size_t ncores,
-           aes_randstate_t rng, bool verbose)
+static mmap_sk
+state_new(const mmap_sk_params *params_,
+          const mmap_sk_opt_params *opts_, size_t ncores,
+          aes_randstate_t rng, bool verbose)
 {
-    int ret = MMAP_OK;
+    clt_pl_state_t *sk;
     bool new_pows = false;
     int *pows;
     int flags = CLT_PL_FLAG_NONE;
@@ -42,10 +41,10 @@ state_init(mmap_sk sk, const mmap_sk_params *params_,
         flags |= CLT_PL_FLAG_VERBOSE;
 
     if (params_ == NULL)
-        return MMAP_ERR;
+        return NULL;
     if (opts_ == NULL || opts_->is_polylog == false) {
         fprintf(stderr, "error: must specify polylog optional parameters\n");
-        return MMAP_ERR;
+        return NULL;
     }
 
     pows = params_->pows;
@@ -69,163 +68,141 @@ state_init(mmap_sk sk, const mmap_sk_params *params_,
         .moduli = (opts_ && opts_->modulus) ? opts_->modulus : NULL,
         .nmoduli = opts_ && opts_->modulus ? 1 : 0,
     };
-    if ((*(clt_pl_state_t **)sk = clt_pl_state_new(&params, &opts, ncores, flags, rng)) == NULL)
-        ret = MMAP_ERR;
+    sk = clt_pl_state_new(&params, &opts, ncores, flags, rng);
     if (new_pows)
         free(pows);
-    return ret;
+    return sk;
 }
 
 static void
-state_clear(mmap_sk sk)
+state_free(mmap_sk sk)
 {
-    clt_pl_state_free(*(clt_pl_state_t **) sk);
+    clt_pl_state_free(sk);
 }
 
-static void
-state_fread(mmap_sk sk, FILE *fp)
+static mmap_sk
+state_fread(FILE *fp)
 {
-    *(clt_pl_state_t **)sk = clt_pl_state_fread(fp);
+    return clt_pl_state_fread(fp);
 }
 
-static void
+static int
 state_fwrite(const mmap_sk sk, FILE *fp)
 {
-    clt_pl_state_fwrite(*(clt_pl_state_t **) sk, fp);
+    return clt_pl_state_fwrite(sk, fp);
 }
 
-static fmpz_t *
+static mpz_t *
 state_get_moduli(const mmap_sk sk)
 {
-    mpz_t *moduli;
-    fmpz_t *fmoduli;
-    size_t nslots = clt_pl_state_nslots(*(clt_pl_state_t **) sk);
-
-    moduli = clt_pl_state_moduli(*(clt_pl_state_t **) sk);
-    fmoduli = calloc(nslots, sizeof fmoduli[0]);
-    for (size_t i = 0; i < nslots; ++i) {
-        fmpz_init(fmoduli[i]);
-        fmpz_set_mpz(fmoduli[i], moduli[i]);
-    }
-    return fmoduli;
+    return clt_pl_state_moduli(sk);
 }
 
 static mmap_pp
-pp_init(const mmap_sk sk)
+pp_new(const mmap_sk sk)
 {
-    clt_pl_pp_t **pp = calloc(1, sizeof pp[0]);
-    *pp = clt_pl_pp_new(*(clt_pl_state_t **) sk);
-    return pp;
+    return clt_pl_pp_new(sk);
 }
 
 static size_t
 state_nslots(const mmap_sk sk)
 {
-    return clt_pl_state_nslots(*(clt_pl_state_t **) sk);
+    return clt_pl_state_nslots(sk);
 }
 
 static size_t
 state_nzs(const mmap_sk sk)
 {
-    return clt_pl_state_nzs(*(clt_pl_state_t **) sk);
+    return clt_pl_state_nzs(sk);
 }
 
 static const
 mmap_sk_vtable clt_pl_sk_vtable =
-  { .init   = state_init
-  , .clear  = state_clear
+  { .new    = state_new
+  , .free   = state_free
   , .fread  = state_fread
   , .fwrite = state_fwrite
-  , .pp     = pp_init
+  , .pp     = pp_new
   , .plaintext_fields = state_get_moduli
   , .nslots = state_nslots
-  , .nzs = state_nzs
-  , .size   = sizeof(clt_pl_state_t *)
+  , .nzs    = state_nzs
   };
 
-static void
-enc_init(mmap_enc enc, const mmap_pp pp)
+static mmap_enc
+enc_new(const mmap_pp pp)
 {
     (void) pp;
-    *(clt_elem_t **) enc = clt_elem_new();
+    return clt_elem_new();
 }
 
 static void
-enc_clear(mmap_enc enc)
+enc_free(mmap_enc enc)
 {
-    clt_elem_free(*(clt_elem_t **) enc);
+    clt_elem_free(enc);
 }
 
-static void
-enc_fread(mmap_enc enc, FILE *fp)
+static mmap_enc
+enc_fread(FILE *fp)
 {
-    *(clt_elem_t **) enc = clt_elem_new();
-    clt_elem_fread(*(clt_elem_t **) enc, fp);
+    clt_elem_t *enc;
+
+    enc = clt_elem_new();
+    clt_elem_fread(enc, fp);
+    return enc;
 }
 
-static void
+static int
 enc_fwrite(const mmap_enc enc, FILE *fp)
 {
-    clt_elem_fwrite(*(clt_elem_t **) enc, fp);
+    return clt_elem_fwrite(enc, fp);
 }
 
 static void
 enc_set(mmap_enc dest, const mmap_enc src)
 {
-    clt_elem_set(*(clt_elem_t **) dest, *(clt_elem_t **) src);
+    clt_elem_set(dest, src);
 }
 
-static void
+static int
 enc_add(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b)
 {
-    clt_pl_elem_add(*(clt_elem_t **) dest, *(clt_pl_pp_t **) pp, *(clt_elem_t **) a, *(clt_elem_t **) b);
+    return clt_pl_elem_add(dest, pp, a, b);
 }
 
-static void
+static int
 enc_sub(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b)
 {
-    clt_pl_elem_sub(*(clt_elem_t **) dest, *(clt_pl_pp_t **) pp, *(clt_elem_t **) a, *(clt_elem_t **) b);
+    return clt_pl_elem_sub(dest, pp, a, b);
 }
 
-static void
+static int
 enc_mul(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b, size_t idx)
 {
-    clt_pl_elem_mul(*(clt_elem_t **)dest, *(clt_pl_pp_t **) pp, *(clt_elem_t **)a, *(clt_elem_t **)b, idx);
+    return clt_pl_elem_mul(dest, pp, a, b, idx);
 }
 
 static bool
 enc_is_zero(const mmap_enc enc, const mmap_pp pp)
 {
-    return clt_pl_is_zero(*(clt_elem_t **)enc, *(clt_pl_pp_t **) pp);
+    return clt_pl_is_zero(enc, pp);
 }
 
-static void
+static int
 encode(mmap_enc enc, const mmap_sk sk, size_t n,
-       const fmpz_t *plaintext, int *ix, size_t level)
+       mpz_t *plaintext, int *ix, size_t level)
 {
-    mpz_t *ins;
-
-    ins = calloc(n, sizeof ins[0]);
-    for (size_t i = 0; i < n; ++i) {
-        mpz_init(ins[i]);
-        fmpz_get_mpz(ins[i], plaintext[i]);
-    }
-    clt_pl_encode(*(clt_elem_t **) enc, *(clt_pl_state_t **) sk, n, ins, ix, level);
-    for (size_t i = 0; i < n; ++i) {
-        mpz_clear(ins[i]);
-    }
-    free(ins);
+    return clt_pl_encode(enc, sk, n, plaintext, ix, level);
 }
 
 static void
 enc_print(const mmap_enc enc)
 {
-    clt_elem_print(*(clt_elem_t **) enc);
+    clt_elem_print(enc);
 }
 
 static const mmap_enc_vtable clt_pl_enc_vtable =
-  { .init    = enc_init
-  , .clear   = enc_clear
+  { .new     = enc_new
+  , .free    = enc_free
   , .fread   = enc_fread
   , .fwrite  = enc_fwrite
   , .set     = enc_set
@@ -236,7 +213,6 @@ static const mmap_enc_vtable clt_pl_enc_vtable =
   , .encode  = encode
   , .degree  = NULL
   , .print   = enc_print
-  , .size    = sizeof(clt_elem_t *)
   };
 
 const mmap_vtable clt_pl_vtable =
