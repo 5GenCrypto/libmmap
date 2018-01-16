@@ -182,11 +182,9 @@ clt_enc_is_zero_wrapper(const mmap_enc enc, const mmap_pp pp)
 }
 
 static int
-clt_encode_wrapper(mmap_enc enc, const mmap_sk sk, size_t n,
-                   mpz_t *plaintext, int *ix, size_t level)
+clt_encode_wrapper(mmap_enc enc, const mmap_sk sk, size_t n, mpz_t *plaintext, void *extra)
 {
-    (void) level;
-    return clt_encode(enc, sk, n, plaintext, ix);
+    return clt_encode(enc, sk, n, plaintext, extra);
 }
 
 static void

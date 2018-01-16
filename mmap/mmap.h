@@ -74,8 +74,7 @@ typedef struct {
     int (*const sub)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b);
     int (*const mul)(mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b, size_t idx);
     bool (*const is_zero)(const mmap_enc enc, const mmap_pp pp);
-    int (*const encode)(mmap_enc enc, const mmap_sk sk, size_t n,
-                        mpz_t *plaintext, int *ix, size_t level);
+    int (*const encode)(mmap_enc enc, const mmap_sk sk, size_t n, mpz_t *plaintext, void *extra);
     unsigned int (*const degree)(const mmap_enc enc);
     void (*const print)(const mmap_enc enc);
 } mmap_enc_vtable;

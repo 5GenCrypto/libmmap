@@ -188,10 +188,9 @@ enc_is_zero(const mmap_enc enc, const mmap_pp pp)
 }
 
 static int
-encode(mmap_enc enc, const mmap_sk sk, size_t n,
-       mpz_t *plaintext, int *ix, size_t level)
+encode(mmap_enc enc, const mmap_sk sk, size_t n, mpz_t *plaintext, void *extra)
 {
-    return clt_pl_encode(enc, sk, n, plaintext, ix, level);
+    return clt_pl_encode(enc, sk, n, plaintext, extra);
 }
 
 static void

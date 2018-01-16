@@ -316,10 +316,9 @@ dummy_enc_is_zero(const mmap_enc enc_, const mmap_pp pp_)
 }
 
 static int
-dummy_encode(const mmap_enc enc_, const mmap_sk sk_, size_t n,
-             mpz_t *plaintext, int *ix, size_t level)
+dummy_encode(const mmap_enc enc_, const mmap_sk sk_, size_t n, mpz_t *plaintext, void *extra)
 {
-    (void) sk_; (void) ix; (void) level;
+    (void) sk_; (void) extra;
     dummy_enc_t *const enc = enc_;
     enc->degree = 1;
     for (size_t i = 0; i < n; ++i) {
