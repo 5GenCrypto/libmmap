@@ -59,7 +59,7 @@ state_new(const mmap_sk_params *params_,
         .lambda = params_->lambda,
         .nlevels = opts_->polylog.nlevels,
         .nswitches = opts_->polylog.nswitches,
-        .sparams = (switch_params_t *) opts_->polylog.sparams,
+        .sparams = (switch_params_t **) opts_->polylog.sparams,
         .nzs = params_->gamma,
         .pows = pows,
     };
@@ -176,9 +176,9 @@ enc_sub(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc 
 }
 
 static int
-enc_mul(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b, size_t idx)
+enc_mul(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b)
 {
-    return clt_pl_elem_mul(dest, pp, a, b, idx);
+    return clt_pl_elem_mul(dest, pp, a, b);
 }
 
 static bool
@@ -188,9 +188,10 @@ enc_is_zero(const mmap_enc enc, const mmap_pp pp)
 }
 
 static int
-encode(mmap_enc enc, const mmap_sk sk, size_t n, mpz_t *plaintext, void *extra)
+encode(mmap_enc enc, const mmap_sk sk, size_t n, mpz_t *plaintext, int *pows, size_t level)
 {
-    return clt_pl_encode(enc, sk, n, plaintext, extra);
+    clt_pl_encode_params_t args = { .ix = pows, .level = level };
+    return clt_pl_encode(enc, sk, n, plaintext, &args);
 }
 
 static void

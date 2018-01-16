@@ -169,9 +169,8 @@ clt_enc_sub_wrapper(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, con
 }
 
 static int
-clt_enc_mul_wrapper(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b, size_t idx)
+clt_enc_mul_wrapper(const mmap_enc dest, const mmap_pp pp, const mmap_enc a, const mmap_enc b)
 {
-    (void) idx;
     return clt_elem_mul(dest, pp, a, b);
 }
 
@@ -182,9 +181,10 @@ clt_enc_is_zero_wrapper(const mmap_enc enc, const mmap_pp pp)
 }
 
 static int
-clt_encode_wrapper(mmap_enc enc, const mmap_sk sk, size_t n, mpz_t *plaintext, void *extra)
+clt_encode_wrapper(mmap_enc enc, const mmap_sk sk, size_t n, mpz_t *plaintext, int *pows, size_t level)
 {
-    return clt_encode(enc, sk, n, plaintext, extra);
+    (void) level;
+    return clt_encode(enc, sk, n, plaintext, pows);
 }
 
 static void

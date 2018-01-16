@@ -159,18 +159,18 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     if (!is_gghlite) {
         mmap->enc->encode(enc0, sk2, 1, &x2  , ix0, 0);
         mmap->enc->encode(enc1, sk2, 1, &zero, ix1, 0);
-        mmap->enc->mul(enc, pp2, enc0, enc1, 0);
+        mmap->enc->mul(enc, pp2, enc0, enc1);
         ok &= expect("is_zero(x * 0)", 1, mmap->enc->is_zero(enc, pp2));
 
         mmap->enc->encode(enc0, sk2, 1, &x2 , ix0, 0);
         mmap->enc->encode(enc1, sk2, 1, &one, ix1, 0);
-        mmap->enc->mul(enc, pp2, enc0, enc1, 0);
+        mmap->enc->mul(enc, pp2, enc0, enc1);
         ok &= expect("is_zero(x * 1)", 0, mmap->enc->is_zero(enc, pp2));
     }
 
     mmap->enc->encode(enc0, sk2, 1, &x2, ix0, 0);
     mmap->enc->encode(enc1, sk2, 1, &x2, ix1, 0);
-    mmap->enc->mul(enc, pp2, enc0, enc1, 0);
+    mmap->enc->mul(enc, pp2, enc0, enc1);
     ok &= expect("is_zero(x * x)", 0, mmap->enc->is_zero(enc, pp2));
 
     mmap->enc->free(enc0);

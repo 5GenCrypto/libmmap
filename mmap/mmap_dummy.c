@@ -279,10 +279,8 @@ dummy_enc_sub(const mmap_enc dest_, const mmap_pp pp_,
 }
 
 static int
-dummy_enc_mul(const mmap_enc dest_, const mmap_pp pp_,
-              const mmap_enc a_, const mmap_enc b_, size_t idx)
+dummy_enc_mul(const mmap_enc dest_, const mmap_pp pp_, const mmap_enc a_, const mmap_enc b_)
 {
-    (void) idx;
     dummy_enc_t *const dest = dest_;
     const dummy_pp_t *const pp = pp_;
     const dummy_enc_t *const a = a_;
@@ -309,16 +307,15 @@ dummy_enc_is_zero(const mmap_enc enc_, const mmap_pp pp_)
         if (pp->verbose)
             fprintf(stderr, "warning: degrees not equal (%u != %u)\n", enc->degree, pp->kappa);
     }
-    for (size_t i = 0; i < pp->nslots; ++i) {
+    for (size_t i = 0; i < pp->nslots; ++i)
         ret &= (mpz_cmp_ui(enc->elems[i], 0) == 0);
-    }
     return ret;
 }
 
 static int
-dummy_encode(const mmap_enc enc_, const mmap_sk sk_, size_t n, mpz_t *plaintext, void *extra)
+dummy_encode(const mmap_enc enc_, const mmap_sk sk_, size_t n, mpz_t *plaintext, int *pows, size_t level)
 {
-    (void) sk_; (void) extra;
+    (void) sk_; (void) pows; (void) level;
     dummy_enc_t *const enc = enc_;
     enc->degree = 1;
     for (size_t i = 0; i < n; ++i) {
