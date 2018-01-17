@@ -38,7 +38,7 @@ if(MMAP_HAVE_GGHLITE)
 endif(MMAP_HAVE_GGHLITE)
 
 include(FindOpenMP)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Werror -std=gnu11 -march=native ${OpenMP_C_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Werror -Wno-unused-result -std=gnu11 -march=native ${OpenMP_C_FLAGS}")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -pg -ggdb -O0")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 target_link_libraries(mmap INTERFACE "${OpenMP_C_FLAGS}")
