@@ -67,6 +67,7 @@ state_new(const mmap_sk_params *params_,
         .slots = opts_ ? opts_->nslots : 0,
         .moduli = (opts_ && opts_->modulus) ? opts_->modulus : NULL,
         .nmoduli = opts_ && opts_->modulus ? 1 : 0,
+        .wordsize = opts_->polylog.wordsize,
     };
     sk = clt_pl_state_new(&params, &opts, ncores, flags, rng);
     if (new_pows)

@@ -41,6 +41,7 @@ typedef struct {
 typedef struct {
     size_t nlevels;
     size_t nswitches;
+    size_t wordsize;
     mmap_polylog_switch_params **sparams;
 } mmap_polylog_sk_params;
 
