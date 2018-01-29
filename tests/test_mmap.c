@@ -2,9 +2,9 @@
 #include <mmap/mmap_clt.h>
 #ifdef HAVE_GGHLITE
 #  include <mmap/mmap_gghlite.h>
+#  include <flint/fmpz.h>
 #endif
 #include <mmap/mmap_dummy.h>
-#include <flint/fmpz.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -212,4 +212,3 @@ int main(int argc, char **argv)
 #endif
     return 0;
 }
-
