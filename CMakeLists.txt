@@ -32,9 +32,9 @@ add_library(mmap SHARED ${mmap_SOURCES})
 target_include_directories(mmap INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mmap>
   $<INSTALL_INTERFACE:include/mmap>)
-target_link_libraries(mmap PUBLIC gmp flint clt13 aesrand)
+target_link_libraries(mmap PUBLIC gmp clt13 aesrand)
 if(MMAP_HAVE_GGHLITE)
-  target_link_libraries(mmap PUBLIC gghlite)
+  target_link_libraries(mmap PUBLIC gghlite flint)
 endif(MMAP_HAVE_GGHLITE)
 
 include(FindOpenMP)
