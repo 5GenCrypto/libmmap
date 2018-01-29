@@ -54,7 +54,10 @@ macro(add_test_ _name)
   target_include_directories("${_name}" PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR})
-  target_link_libraries("${_name}" PRIVATE mmap gmp flint aesrand)
+  target_link_libraries("${_name}" PRIVATE mmap gmp aesrand)
+  if(MMAP_HAVE_GGHLITE)
+    target_link_libraries("${_name}" PRIVATE flint)
+  endif(MMAP_HAVE_GGHLITE)
   add_test(NAME "${_name}" COMMAND "${_name}")
 endmacro()
 
