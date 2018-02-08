@@ -16,6 +16,7 @@ set(mmap_SOURCES
   mmap/mmap_clt.c
   mmap/mmap_clt_pl.c
   mmap/mmap_dummy.c
+  mmap/mmap_enc_mat.c
   )
 set(mmap_HEADERS
   mmap/mmap.h
