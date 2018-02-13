@@ -122,29 +122,29 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     }
 
     if (!is_gghlite) {
-        mmap->enc->encode(enc0, sk1, 1, &zero, top_level, 0);
-        mmap->enc->encode(enc1, sk1, 1, &zero, top_level, 0);
+        mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &zero, top_level, 0);
+        mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &zero, top_level, 0);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + 0)", 1, mmap->enc->is_zero(enc, pp1));
 
-        mmap->enc->encode(enc0, sk1, 1, &zero, top_level, 0);
-        mmap->enc->encode(enc1, sk1, 1, &one,  top_level, 0);
+        mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &zero, top_level, 0);
+        mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &one,  top_level, 0);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + 1)", 0, mmap->enc->is_zero(enc, pp1));
 
-        mmap->enc->encode(enc0, sk1, 1, &zero, top_level, 0);
-        mmap->enc->encode(enc1, sk1, 1, &x1,   top_level, 0);
+        mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &zero, top_level, 0);
+        mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &x1,   top_level, 0);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + x)", 0, mmap->enc->is_zero(enc, pp1));
         /* TODO: why doesn't this make gghlite happy? */
-        mmap->enc->encode(enc0, sk1, 1, &x1, top_level, 0);
-        mmap->enc->encode(enc1, sk1, 1, &x1, top_level, 0);
+        mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &x1, top_level, 0);
+        mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &x1, top_level, 0);
         mmap->enc->add(enc, pp1, enc, enc);
         ok &= expect("is_zero(x + x)", 0, mmap->enc->is_zero(enc, pp1));
     }
 
-    mmap->enc->encode(enc0, sk1, 1, &x1, top_level, 0);
-    mmap->enc->encode(enc1, sk1, 1, &x1, top_level, 0);
+    mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &x1, top_level, 0);
+    mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &x1, top_level, 0);
     mmap->enc->sub(enc, pp1, enc0, enc1);
     ok &= expect("is_zero(x - x)", 1, mmap->enc->is_zero(enc, pp1));
 
@@ -157,19 +157,19 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     enc = mmap->enc->new(pp2);
 
     if (!is_gghlite) {
-        mmap->enc->encode(enc0, sk2, 1, &x2  , ix0, 0);
-        mmap->enc->encode(enc1, sk2, 1, &zero, ix1, 0);
+        mmap->enc->encode(enc0, sk2, 1, (const mpz_t *) &x2  , ix0, 0);
+        mmap->enc->encode(enc1, sk2, 1, (const mpz_t *) &zero, ix1, 0);
         mmap->enc->mul(enc, pp2, enc0, enc1);
         ok &= expect("is_zero(x * 0)", 1, mmap->enc->is_zero(enc, pp2));
 
-        mmap->enc->encode(enc0, sk2, 1, &x2 , ix0, 0);
-        mmap->enc->encode(enc1, sk2, 1, &one, ix1, 0);
+        mmap->enc->encode(enc0, sk2, 1, (const mpz_t *) &x2 , ix0, 0);
+        mmap->enc->encode(enc1, sk2, 1, (const mpz_t *) &one, ix1, 0);
         mmap->enc->mul(enc, pp2, enc0, enc1);
         ok &= expect("is_zero(x * 1)", 0, mmap->enc->is_zero(enc, pp2));
     }
 
-    mmap->enc->encode(enc0, sk2, 1, &x2, ix0, 0);
-    mmap->enc->encode(enc1, sk2, 1, &x2, ix1, 0);
+    mmap->enc->encode(enc0, sk2, 1, (const mpz_t *) &x2, ix0, 0);
+    mmap->enc->encode(enc1, sk2, 1, (const mpz_t *) &x2, ix1, 0);
     mmap->enc->mul(enc, pp2, enc0, enc1);
     ok &= expect("is_zero(x * x)", 0, mmap->enc->is_zero(enc, pp2));
 

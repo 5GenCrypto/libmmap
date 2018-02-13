@@ -313,7 +313,8 @@ dummy_enc_is_zero(const mmap_enc enc_, const mmap_pp pp_)
 }
 
 static int
-dummy_encode(const mmap_enc enc_, const mmap_sk sk_, size_t n, mpz_t *plaintext, int *pows, size_t level)
+dummy_encode(const mmap_enc enc_, const mmap_sk sk_, size_t n,
+             const mpz_t *plaintext, const int *pows, size_t level)
 {
     (void) sk_; (void) pows; (void) level;
     dummy_enc_t *const enc = enc_;

@@ -189,10 +189,10 @@ enc_is_zero(const mmap_enc enc, const mmap_pp pp)
 }
 
 static int
-encode(mmap_enc enc, const mmap_sk sk, size_t n, mpz_t *plaintext, int *pows, size_t level)
+encode(mmap_enc enc, const mmap_sk sk, size_t n, const mpz_t *plaintext, const int *pows, size_t level)
 {
     clt_pl_encode_params_t args = { .ix = pows, .level = level };
-    return clt_pl_encode(enc, sk, n, plaintext, &args);
+    return clt_pl_encode(enc, sk, n, (mpz_t *) plaintext, &args); /* XXX */
 }
 
 static void
