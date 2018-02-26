@@ -36,7 +36,7 @@ clt_state_new_wrapper(const mmap_sk_params *params_,
     clt_state_t *sk;
     bool new_pows = false;
     int *pows;
-    int flags = CLT_FLAG_OPT_CRT_TREE | CLT_FLAG_OPT_PARALLEL_ENCODE;
+    int flags = CLT_FLAG_OPT_CRT_TREE;
     if (verbose)
         flags |= CLT_FLAG_VERBOSE;
 
