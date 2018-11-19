@@ -34,23 +34,9 @@ typedef struct {
 } mmap_sk_params;
 
 typedef struct {
-    size_t source;
-    size_t target;
-    int *ix;
-} mmap_polylog_switch_params;
-
-typedef struct {
-    size_t nlevels;
-    size_t nswitches;
-    size_t wordsize;
-    mmap_polylog_switch_params **sparams;
-} mmap_polylog_sk_params;
-
-typedef struct {
     size_t nslots;              /* number of required slots */
     mpz_t *modulus;             /* plaintext modulus of first slot */
     bool is_polylog;
-    mmap_polylog_sk_params polylog;
 } mmap_sk_opt_params;
 
 typedef struct {
