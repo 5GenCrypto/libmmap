@@ -206,7 +206,7 @@ clt_encode_wrapper(mmap_enc enc, const mmap_sk sk, size_t n,
         mpz_init(ins[i]);
         fmpz_get_mpz(ins[i], plaintext[i]);
     }
-    clt_encode(*(clt_elem_t **) enc, *(clt_state_t **) sk, n, ins, group);
+    clt_encode(*(clt_elem_t **) enc, *(clt_state_t **) sk, n, (const mpz_t *) ins, group);
     for (size_t i = 0; i < n; ++i) {
         mpz_clear(ins[i]);
     }
