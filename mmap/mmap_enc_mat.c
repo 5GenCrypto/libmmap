@@ -13,9 +13,7 @@ mmap_enc_mat_init(const_mmap_vtable mmap, const mmap_pp params,
         m->m[i] = malloc(m->ncols * sizeof(mmap_enc));
         assert(m->m[i]);
         for(int j = 0; j < m->ncols; j++) {
-            m->m[i][j] = malloc(mmap->enc->size);
-            assert(m->m[i][j]);
-            mmap->enc->init(m->m[i][j], params);
+            m->m[i][j] = mmap->enc->new(params);
         }
     }
 }
@@ -25,8 +23,7 @@ mmap_enc_mat_clear(const_mmap_vtable mmap, mmap_enc_mat_t m)
 {
     for(int i = 0; i < m->nrows; i++) {
         for(int j = 0; j < m->ncols; j++) {
-            mmap->enc->clear(m->m[i][j]);
-            free(m->m[i][j]);
+            mmap->enc->free(m->m[i][j]);
         }
         free(m->m[i]);
     }
@@ -41,8 +38,7 @@ mmap_enc_mat_mul(const_mmap_vtable mmap, const mmap_pp params,
     mmap_enc tmp;
     mmap_enc_mat_t tmp_mat;
 
-    tmp = malloc(mmap->enc->size);
-    mmap->enc->init(tmp, params);
+    tmp = mmap->enc->new(params);
 
     mmap_enc_mat_init(mmap, params, tmp_mat, m1->nrows, m2->ncols);
 
@@ -67,8 +63,7 @@ mmap_enc_mat_mul(const_mmap_vtable mmap, const mmap_pp params,
     }
 
     mmap_enc_mat_clear(mmap, tmp_mat);
-    mmap->enc->clear(tmp);
-    free(tmp);
+    mmap->enc->free(tmp);
 }
 
 void
@@ -85,12 +80,11 @@ mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_pp params,
     for(int i = 0; i < m1->nrows; i++) {
         for(int j = 0; j < m2->ncols; j++) {
             for(int k = 0; k < m1->ncols; k++) {
-                mmap_enc tmp = malloc(mmap->enc->size);
-                mmap->enc->init(tmp, params);
+                mmap_enc *tmp;
+                tmp = mmap->enc->new(params);
                 mmap->enc->mul(tmp, params, m1->m[i][k], m2->m[k][j]);
                 mmap->enc->add(tmp_mat->m[i][j], params, tmp_mat->m[i][j], tmp);
-                mmap->enc->clear(tmp);
-                free(tmp);
+                mmap->enc->free(tmp);
             }
         }
     }
@@ -106,4 +100,3 @@ mmap_enc_mat_mul_par(const_mmap_vtable mmap, const mmap_pp params,
 
     mmap_enc_mat_clear(mmap, tmp_mat);
 }
-

@@ -2,9 +2,9 @@
 #include <mmap/mmap_clt.h>
 #ifdef HAVE_GGHLITE
 #  include <mmap/mmap_gghlite.h>
+#  include <flint/fmpz.h>
 #endif
 #include <mmap/mmap_dummy.h>
-#include <flint/fmpz.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,18 +14,17 @@
 #include "utils.h"
 
 const ulong lambdas[] = {8, 16, 24, 32};
-bool deterministic;
+bool deterministic = false;
 
 static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
 {
     const size_t nzs = 10;
-    /* const size_t kappa = 2; */
     int pows[nzs], top_level[nzs], ix0[nzs], ix1[nzs];
     aes_randstate_t rng;
     mmap_sk sk1, sk2;
     mmap_pp pp1, pp2;
     mmap_enc enc0, enc1, enc;
-    fmpz_t x1, x2, zero, one;
+    mpz_t x1, x2, zero, one;
     int ok = 1;
 
     if(deterministic) {
@@ -50,11 +49,9 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
         .pows = pows,
     };
 
-    sk1 = malloc(mmap->sk->size);
-    sk2 = malloc(mmap->sk->size);
-    mmap->sk->init(sk1, &params, NULL, 0, rng, true);
+    sk1 = mmap->sk->new(&params, NULL, 0, rng, true);
     params.kappa = 2;
-    mmap->sk->init(sk2, &params, NULL, 0, rng, true);
+    sk2 = mmap->sk->new(&params, NULL, 0, rng, true);
 
     /* Test serialization */
     {
@@ -62,64 +59,56 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
 
         f = tmpfile();
         mmap->sk->fwrite(sk2, f);
-        mmap->sk->clear(sk2);
-        free(sk2);
+        mmap->sk->free(sk2);
         rewind(f);
-        sk2 = malloc(mmap->sk->size);
-        mmap->sk->fread(sk2, f);
+        sk2 = mmap->sk->fread(f);
         fclose(f);
 
         f = tmpfile();
         pp1 = mmap->sk->pp(sk2);
         mmap->pp->fwrite(pp1, f);
-        /* mmap->pp->clear(pp1); */
-        free(pp1);
+        mmap->pp->free(pp1);
         rewind(f);
-        pp2 = malloc(mmap->pp->size);
-        mmap->pp->fread(pp2, f);
+        pp2 = mmap->pp->fread(f);
         fclose(f);
     }
     pp1 = mmap->sk->pp(sk1);
 
-    fmpz_init_set_ui(x1, 0);
-    fmpz_init_set_ui(x2, 0);
-    while (fmpz_cmp_ui(x1, 0) <= 0) {
-        fmpz_t *moduli;
-        fmpz_set_ui(x1, rand());
+    mpz_init_set_ui(x1, 0);
+    mpz_init_set_ui(x2, 0);
+    while (mpz_cmp_ui(x1, 0) <= 0) {
+        mpz_t *moduli;
+        mpz_set_ui(x1, rand());
         moduli = mmap->sk->plaintext_fields(sk1);
-        fmpz_mod(x1, x1, moduli[0]);
-        free(moduli);
+        mpz_mod(x1, x1, moduli[0]);
     }
-    while (fmpz_cmp_ui(x2, 0) <= 0) {
-        fmpz_t *moduli;
-        fmpz_set_ui(x2, rand());
+    while (mpz_cmp_ui(x2, 0) <= 0) {
+        mpz_t *moduli;
+        mpz_set_ui(x2, rand());
         moduli = mmap->sk->plaintext_fields(sk2);
-        fmpz_mod(x2, x2, moduli[0]);
-        free(moduli);
+        gmp_printf("%Zd\n", moduli[0]);
+        mpz_mod(x2, x2, moduli[0]);
     }
 
-    fmpz_init_set_ui(zero, 0);
-    fmpz_init_set_ui(one, 1);
+    mpz_init_set_ui(zero, 0);
+    mpz_init_set_ui(one, 1);
 
     for (ulong i = 0; i < nzs; i++) {
         top_level[i] = 1;
     }
 
-    enc0 = malloc(mmap->enc->size);
-    enc1 = malloc(mmap->enc->size);
-    enc = malloc(mmap->enc->size);
-    mmap->enc->init(enc0, pp1);
-    mmap->enc->init(enc1, pp1);
-    mmap->enc->init(enc, pp1);
+    enc0 = mmap->enc->new(pp1);
+    enc1 = mmap->enc->new(pp1);
+    enc = mmap->enc->new(pp1);
     {
         /* Test encoding serialization */
         FILE *f = tmpfile();
         mmap->enc->fwrite(enc0, f);
-        mmap->enc->clear(enc0);
+        mmap->enc->free(enc0);
         rewind(f);
-        mmap->enc->fread(enc0, f);
-        mmap->enc->clear(enc0);
-        mmap->enc->init(enc0, pp1);
+        enc0 = mmap->enc->fread(f);
+        mmap->enc->free(enc0);
+        enc0 = mmap->enc->new(pp1);
         fclose(f);
     }
     for (ulong i = 0; i < nzs; i++) {
@@ -133,73 +122,66 @@ static int test(const mmap_vtable *mmap, ulong lambda, bool is_gghlite)
     }
 
     if (!is_gghlite) {
-        mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&zero, top_level);
-        mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&zero, top_level);
+        mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &zero, top_level, 0);
+        mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &zero, top_level, 0);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + 0)", 1, mmap->enc->is_zero(enc, pp1));
 
-        mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&zero, top_level);
-        mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&one,  top_level);
+        mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &zero, top_level, 0);
+        mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &one,  top_level, 0);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + 1)", 0, mmap->enc->is_zero(enc, pp1));
 
-        mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&zero, top_level);
-        mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&x1,   top_level);
+        mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &zero, top_level, 0);
+        mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &x1,   top_level, 0);
         mmap->enc->add(enc, pp1, enc0, enc1);
         ok &= expect("is_zero(0 + x)", 0, mmap->enc->is_zero(enc, pp1));
         /* TODO: why doesn't this make gghlite happy? */
-        mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&x1, top_level);
-        mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&x1, top_level);
+        mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &x1, top_level, 0);
+        mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &x1, top_level, 0);
         mmap->enc->add(enc, pp1, enc, enc);
         ok &= expect("is_zero(x + x)", 0, mmap->enc->is_zero(enc, pp1));
     }
 
-    mmap->enc->encode(enc0, sk1, 1, (const fmpz_t *)&x1, top_level);
-    mmap->enc->encode(enc1, sk1, 1, (const fmpz_t *)&x1, top_level);
+    mmap->enc->encode(enc0, sk1, 1, (const mpz_t *) &x1, top_level, 0);
+    mmap->enc->encode(enc1, sk1, 1, (const mpz_t *) &x1, top_level, 0);
     mmap->enc->sub(enc, pp1, enc0, enc1);
     ok &= expect("is_zero(x - x)", 1, mmap->enc->is_zero(enc, pp1));
-    mmap->pp->clear(pp1);
-    free(pp1);
 
-    mmap->enc->clear(enc0);
-    mmap->enc->clear(enc1);
-    mmap->enc->clear(enc);
+    mmap->enc->free(enc0);
+    mmap->enc->free(enc1);
+    mmap->enc->free(enc);
 
-    mmap->enc->init(enc0, pp2);
-    mmap->enc->init(enc1, pp2);
-    mmap->enc->init(enc,  pp2);
+    enc0 = mmap->enc->new(pp2);
+    enc1 = mmap->enc->new(pp2);
+    enc = mmap->enc->new(pp2);
 
     if (!is_gghlite) {
-        mmap->enc->encode(enc0, sk2, 1, (const fmpz_t *)&x2  , ix0);
-        mmap->enc->encode(enc1, sk2, 1, (const fmpz_t *)&zero, ix1);
-        mmap->enc->mul(enc, pp2, enc0, enc1, 0);
+        mmap->enc->encode(enc0, sk2, 1, (const mpz_t *) &x2  , ix0, 0);
+        mmap->enc->encode(enc1, sk2, 1, (const mpz_t *) &zero, ix1, 0);
+        mmap->enc->mul(enc, pp2, enc0, enc1);
         ok &= expect("is_zero(x * 0)", 1, mmap->enc->is_zero(enc, pp2));
 
-        mmap->enc->encode(enc0, sk2, 1, (const fmpz_t *)&x2 , ix0);
-        mmap->enc->encode(enc1, sk2, 1, (const fmpz_t *)&one, ix1);
-        mmap->enc->mul(enc, pp2, enc0, enc1, 0);
+        mmap->enc->encode(enc0, sk2, 1, (const mpz_t *) &x2 , ix0, 0);
+        mmap->enc->encode(enc1, sk2, 1, (const mpz_t *) &one, ix1, 0);
+        mmap->enc->mul(enc, pp2, enc0, enc1);
         ok &= expect("is_zero(x * 1)", 0, mmap->enc->is_zero(enc, pp2));
     }
 
-    mmap->enc->encode(enc0, sk2, 1, (const fmpz_t *)&x2, ix0);
-    mmap->enc->encode(enc1, sk2, 1, (const fmpz_t *)&x2, ix1);
-    mmap->enc->mul(enc, pp2, enc0, enc1, 0);
+    mmap->enc->encode(enc0, sk2, 1, (const mpz_t *) &x2, ix0, 0);
+    mmap->enc->encode(enc1, sk2, 1, (const mpz_t *) &x2, ix1, 0);
+    mmap->enc->mul(enc, pp2, enc0, enc1);
     ok &= expect("is_zero(x * x)", 0, mmap->enc->is_zero(enc, pp2));
 
-    mmap->enc->clear(enc0);
-    mmap->enc->clear(enc1);
-    mmap->enc->clear(enc);
-    free(enc0);
-    free(enc1);
-    free(enc);
+    mmap->enc->free(enc0);
+    mmap->enc->free(enc1);
+    mmap->enc->free(enc);
+    mmap->pp->free(pp1);
+    mmap->pp->free(pp2);
+    mmap->sk->free(sk1);
+    mmap->sk->free(sk2);
 
-    mmap->pp->clear(pp2);
-    free(pp2);
-
-    mmap->sk->clear(sk1);
-    mmap->sk->clear(sk2);
-    free(sk1);
-    free(sk2);
+    mpz_clears(x1, x2, zero, one, NULL);
     return !ok;
 }
 
@@ -230,4 +212,3 @@ int main(int argc, char **argv)
 #endif
     return 0;
 }
-
