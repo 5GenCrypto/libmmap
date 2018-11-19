@@ -68,8 +68,8 @@ echo
 echo builddir = $builddir
 echo
 
-build libaesrand git@github.com:5GenCrypto/libaesrand cmake
-build clt13      git@github.com:5GenCrypto/clt13 dev
+build libaesrand git@github.com:5GenCrypto/libaesrand master
+build clt13      git@github.com:5GenCrypto/clt13 master
 if [ x"$gghlite" = x"y" ]; then
    build gghlite    git@github.com:5GenCrypto/gghlite-flint master
 fi

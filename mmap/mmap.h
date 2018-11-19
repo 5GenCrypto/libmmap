@@ -1,9 +1,10 @@
 #ifndef _LIBMMAP_MMAP_H_
 #define _LIBMMAP_MMAP_H_
 
-#include <aesrand/aesrand.h>
+#include <aesrand.h>
 #include <stdbool.h>
 #include <stdio.h> /* for FILE */
+#include <flint/fmpz.h>
 #include <gmp.h>
 
 #define MMAP_OK 0

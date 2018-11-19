@@ -14,13 +14,11 @@ message(STATUS "GGHLite: ${MMAP_HAVE_GGHLITE}")
 
 set(mmap_SOURCES
   mmap/mmap_clt.c
-  mmap/mmap_clt_pl.c
   mmap/mmap_dummy.c
   )
 set(mmap_HEADERS
   mmap/mmap.h
   mmap/mmap_clt.h
-  mmap/mmap_clt_pl.h
   mmap/mmap_dummy.h
   )
 if(MMAP_HAVE_GGHLITE)
